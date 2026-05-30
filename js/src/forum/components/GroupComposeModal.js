@@ -1,5 +1,5 @@
 import app from 'flarum/forum/app';
-import Modal from 'flarum/common/components/Modal';
+import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import UserSelectionModal from 'flarum/common/components/UserSelectionModal';
 import Stream from 'flarum/common/utils/Stream';
@@ -13,7 +13,7 @@ import extractText from 'flarum/common/utils/extractText';
  * posts the first message through flarum/messages' normal message endpoint and
  * navigates to the new conversation.
  */
-export default class GroupComposeModal extends Modal {
+export default class GroupComposeModal extends FormModal {
   oninit(vnode) {
     super.oninit(vnode);
     this.selected = [];                 // User[]
@@ -101,7 +101,14 @@ export default class GroupComposeModal extends Modal {
       title: app.translator.trans('ernestdefoe-group-messages.forum.compose.recipients_label', {}, true),
       selected: this.selected,
       onsubmit: (users) => {
-        this.selected = users.filter((u) => u && u.id() !== app.session.user.id());
+        // Drop the actor and de-duplicate by id (the picker can momentarily
+        // hand back the same user twice while its list re-renders).
+        const seen = new Set();
+        this.selected = users.filter((u) => {
+          if (!u || u.id() === app.session.user.id() || seen.has(u.id())) return false;
+          seen.add(u.id());
+          return true;
+        });
         // Re-open this modal (UserSelectionModal replaced it).
         app.modal.show(GroupComposeModal, { reopenSelected: this.selected, ...this.attrs });
         m.redraw();
@@ -119,7 +126,8 @@ export default class GroupComposeModal extends Modal {
 
   async onsubmit(e) {
     e.preventDefault();
-    if (this.selected.length < 2 || !this.body().trim()) return;
+    const userIds = [...new Set(this.selected.map((u) => Number(u.id())))];
+    if (userIds.length < 2 || !this.body().trim()) return;
     this.loading = true;
 
     try {
@@ -129,7 +137,7 @@ export default class GroupComposeModal extends Modal {
         body: {
           data: {
             attributes: {
-              userIds: this.selected.map((u) => Number(u.id())),
+              userIds,
               title: this.groupName().trim() || null,
               iconUrl: this.icon().trim() || null,
             },
@@ -151,7 +159,6 @@ export default class GroupComposeModal extends Modal {
       this.loading = false;
       app.alerts.show({ type: 'error' }, app.translator.trans('ernestdefoe-group-messages.forum.compose.create_error'));
       m.redraw();
-      throw err;
     }
   }
 }
