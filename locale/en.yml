@@ -17,6 +17,11 @@ ernestdefoe-group-messages:
       seen_by_count: "Seen by {count}"
     reactions:
       add_label: Add reaction
+    reply:
+      reply_button: Reply
+      replying_to: "Replying to {username}"
+      cancel: Cancel reply
+      unknown: In reply to an earlier message
     manage:
       title: Group settings
       name_label: Group name & icon

@@ -233,3 +233,75 @@
     }
   }
 }
+
+// Inline "in reply to …" reference shown above a replying message.
+.GroupReplyReference {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+  padding: 3px 8px;
+  border-left: 2px solid var(--control-bg, rgba(0, 0, 0, 0.15));
+  font-size: 13px;
+  color: var(--muted-color);
+
+  .GroupReplyReference-body {
+    display: inline-flex;
+    gap: 6px;
+    min-width: 0;
+  }
+
+  .GroupReplyReference-author {
+    font-weight: 600;
+    color: var(--text-color);
+    flex: 0 0 auto;
+  }
+
+  .GroupReplyReference-snippet {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .GroupReplyReference-body--missing {
+    font-style: italic;
+  }
+}
+
+// "Replying to …" indicator in the message composer header.
+.GroupReplyingTo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  border-radius: var(--border-radius);
+  background: var(--control-bg, rgba(0, 0, 0, 0.05));
+  font-size: 13px;
+
+  .GroupReplyingTo-text {
+    display: inline-flex;
+    gap: 6px;
+    min-width: 0;
+    flex: 1;
+  }
+
+  .GroupReplyingTo-snippet {
+    color: var(--muted-color);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .GroupReplyingTo-cancel {
+    margin-left: auto;
+  }
+}
+
+.Message-reply {
+  color: var(--muted-color);
+
+  &:hover {
+    color: var(--link-color);
+  }
+}
