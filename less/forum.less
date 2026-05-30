@@ -298,8 +298,21 @@
   }
 }
 
+// Keep the reactions bar and the reply button on one row in the message footer.
+.Message .Post-footer > ul {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+
+  > li {
+    margin: 0;
+  }
+}
+
 .Message-reply {
   color: var(--muted-color);
+  padding: 1px 6px;
 
   &:hover {
     color: var(--link-color);

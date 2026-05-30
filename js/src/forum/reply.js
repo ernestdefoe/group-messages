@@ -117,8 +117,9 @@ export default function applyReply() {
   });
 
   reg.onLoad('flarum-messages', 'forum/components/Message', (Message) => {
-    // Inline reply affordance beside each message.
-    extend(Message.prototype, 'actionItems', function (items) {
+    // Reply affordance in the message footer, alongside the reactions bar
+    // (priority just below GroupReactions so it sits right after the picker).
+    extend(Message.prototype, 'footerItems', function (items) {
       const message = this.attrs.message;
       if (!message.dialog || !message.dialog()) return;
 
@@ -127,7 +128,7 @@ export default function applyReply() {
         <Button className="Button Button--link Message-reply" icon="fas fa-reply" onclick={() => startReply(message)}>
           {app.translator.trans('ernestdefoe-group-messages.forum.reply.reply_button')}
         </Button>,
-        10
+        4
       );
     });
 
