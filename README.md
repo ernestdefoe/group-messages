@@ -1,5 +1,11 @@
 # Group Messages
 
+[![Floxum](https://floxum.com/extension/ernestdefoe/group-messages/badge/name)](https://floxum.com/extension/ernestdefoe/group-messages)
+[![Version](https://floxum.com/extension/ernestdefoe/group-messages/badge/highest-version)](https://floxum.com/extension/ernestdefoe/group-messages)
+[![Downloads](https://floxum.com/extension/ernestdefoe/group-messages/badge/downloads)](https://floxum.com/extension/ernestdefoe/group-messages)
+[![Review](https://floxum.com/extension/ernestdefoe/group-messages/badge/review)](https://floxum.com/extension/ernestdefoe/group-messages)
+[![License](https://floxum.com/extension/ernestdefoe/group-messages/badge/license)](https://floxum.com/extension/ernestdefoe/group-messages)
+
 [![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE.md)
 [![Latest Stable Version](https://img.shields.io/packagist/v/ernestdefoe/group-messages.svg)](https://packagist.org/packages/ernestdefoe/group-messages)
 
