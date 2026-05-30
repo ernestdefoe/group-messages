@@ -42,7 +42,7 @@
     },
     "flarum-cli": {
       "modules": {
-        "githubActions": false
+        "githubActions": true
       }
     }
   },
