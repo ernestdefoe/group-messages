@@ -1,0 +1,30 @@
+<?php
+
+namespace Ernestdefoe\GroupMessages;
+
+use Flarum\Extend;
+use Flarum\Messages\Dialog;
+use Flarum\User\User;
+
+// Register the 'group' dialog type alongside flarum/messages' built-in
+// 'direct'. DialogResource validates the type against Dialog::$types
+// (->in(Dialog::$types)), so without this the API rejects type=group.
+// flarum/messages is a hard dependency, but guard anyway so a half-installed
+// state can't fatal the boot.
+if (class_exists(Dialog::class) && ! in_array('group', Dialog::$types, true)) {
+    Dialog::$types[] = 'group';
+}
+
+return [
+    (new Extend\Frontend('forum'))
+        ->js(__DIR__ . '/js/dist/forum.js')
+        ->css(__DIR__ . '/less/forum.less'),
+
+    new Extend\Locales(__DIR__ . '/locale'),
+
+    // Companion relations on flarum/messages' Dialog. groupDetail holds the
+    // name/icon/owner for group dialogs; moderators are the promoted managers.
+    (new Extend\Model(Dialog::class))
+        ->hasOne('groupDetail', GroupDialog::class, 'dialog_id')
+        ->belongsToMany('moderators', User::class, 'group_dialog_moderators', 'dialog_id', 'user_id'),
+];
