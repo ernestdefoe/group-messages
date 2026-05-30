@@ -17,7 +17,7 @@ app.initializers.add('ernestdefoe-group-messages', () => {
   // Prepend a "New group message" action to the messages dropdown.
   override(DialogsDropdown.prototype, 'getContent', function (original) {
     return [
-      <div className="DialogsDropdown-newGroup" key="gm-new-group">
+      <div className="DialogsDropdown-newGroup">
         <Button
           className="Button Button--block Button--link hasIcon"
           icon="fas fa-users"
