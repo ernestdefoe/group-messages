@@ -201,14 +201,23 @@
     }
   }
 
-  // Lays the emoji palette out in a row inside Flarum's Dropdown-menu, which
-  // already provides positioning, background and shadow.
-  &.GroupReactions-picker,
+  // The picker is a Flarum Dropdown-menu (hidden via display:none until the
+  // dropdown is .open). Only override its layout WHEN open — otherwise an
+  // unconditional `display` would keep the closed menu permanently visible.
   .GroupReactions-picker {
+    min-width: 0;
+    padding: 4px;
+  }
+
+  // Open the palette upward, above the button — opening downward gets clipped
+  // by the message card's bottom edge / the next message.
+  .GroupReactions-add.open > .GroupReactions-picker {
     display: flex;
     gap: 2px;
-    padding: 4px;
-    min-width: 0;
+    top: auto;
+    bottom: 100%;
+    margin: 0 0 4px;
+    z-index: 20;
   }
 
   .GroupReactions-pickerEmoji {
