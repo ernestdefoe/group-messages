@@ -17,6 +17,20 @@ A [Flarum](https://flarum.org) extension that turns private messages into **grou
 
 Direct (1-on-1) messages are left completely untouched.
 
+## Screenshots
+
+A group conversation — custom name and icon, participant count, message reactions, replies with an inline reference, and per-message actions:
+
+![A group conversation with reactions and a reply](screenshots/conversation.png)
+
+Starting a new group — pick people, give it a name and an emoji icon, write the first message:
+
+![The new group message composer](screenshots/compose.png)
+
+Managing a group — rename and re-icon, add or remove people, promote or demote moderators, or leave:
+
+![The group settings modal](screenshots/manage.png)
+
 ## Installation
 
 ```sh
