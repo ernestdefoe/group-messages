@@ -2,7 +2,10 @@
 
 namespace Ernestdefoe\GroupMessages;
 
+use Ernestdefoe\GroupMessages\Access\GroupDialogPolicy;
+use Ernestdefoe\GroupMessages\Api\GroupEndpoints;
 use Flarum\Extend;
+use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
 use Flarum\User\User;
 
@@ -27,4 +30,11 @@ return [
     (new Extend\Model(Dialog::class))
         ->hasOne('groupDetail', GroupDialog::class, 'dialog_id')
         ->belongsToMany('moderators', User::class, 'group_dialog_moderators', 'dialog_id', 'user_id'),
+
+    // Group create + management endpoints on the dialogs resource.
+    (new Extend\ApiResource(DialogResource::class))
+        ->endpoints(fn () => GroupEndpoints::get()),
+
+    (new Extend\Policy())
+        ->modelPolicy(Dialog::class, GroupDialogPolicy::class),
 ];
