@@ -22,6 +22,8 @@ ernestdefoe-group-messages:
       replying_to: "Replying to {username}"
       cancel: Cancel reply
       unknown: In reply to an earlier message
+    quote:
+      quote_button: Quote
     manage:
       title: Group settings
       name_label: Group name & icon

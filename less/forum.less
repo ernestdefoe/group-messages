@@ -310,11 +310,27 @@
   }
 }
 
-.Message-reply {
+.Message-reply,
+.Message-quote {
   color: var(--muted-color);
   padding: 1px 6px;
 
   &:hover {
     color: var(--link-color);
+  }
+}
+
+// Read-receipt avatars on a group's last message.
+.GroupSeenBy {
+  display: inline-flex;
+  align-items: center;
+  margin-left: auto;
+
+  .Avatar {
+    width: 18px;
+    height: 18px;
+    margin-left: -5px;
+    border: 1px solid var(--body-bg);
+    box-shadow: 0 0 0 1px var(--control-bg, rgba(0, 0, 0, 0.1));
   }
 }

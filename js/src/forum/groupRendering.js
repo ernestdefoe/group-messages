@@ -4,6 +4,7 @@ import classList from 'flarum/common/utils/classList';
 import Link from 'flarum/common/components/Link';
 import Icon from 'flarum/common/components/Icon';
 import Button from 'flarum/common/components/Button';
+import Avatar from 'flarum/common/components/Avatar';
 import humanTime from 'flarum/common/helpers/humanTime';
 
 import GroupManageModal from './components/GroupManageModal';
@@ -100,10 +101,36 @@ export default function applyGroupRendering() {
     });
   });
 
-  // ----- Reactions bar under every dialog message.
+  // ----- Reactions bar + "seen by" avatars under dialog messages.
   reg.onLoad('flarum-messages', 'forum/components/Message', (Message) => {
     extend(Message.prototype, 'footerItems', function (items) {
       items.add('groupReactions', <GroupReactions message={this.attrs.message} />, 5);
+    });
+
+    // Read receipts: small avatars on a group's last message for the other
+    // participants who have read up to it (from the dialog's seenBy field).
+    extend(Message.prototype, 'footerItems', function (items) {
+      const message = this.attrs.message;
+      const dialog = message.dialog && message.dialog();
+      if (!dialog || dialog.type() !== 'group') return;
+      if (Number(message.id()) !== Number(dialog.lastMessageId())) return;
+
+      const selfId = app.session.user && app.session.user.id();
+      const ids = (dialog.attribute('lastMessageSeenByIds') || []).filter((id) => String(id) !== String(selfId));
+      const users = ids.map((id) => app.store.getById('users', String(id))).filter(Boolean);
+      if (!users.length) return;
+
+      const names = users.map((u) => u.username()).join(', ');
+
+      items.add(
+        'groupSeenBy',
+        <div className="GroupSeenBy" title={app.translator.trans('ernestdefoe-group-messages.forum.dialog.seen_by', { names }, true)}>
+          {users.map((u) => (
+            <Avatar user={u} />
+          ))}
+        </div>,
+        -10
+      );
     });
   });
 }
