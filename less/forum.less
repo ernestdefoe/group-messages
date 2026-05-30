@@ -38,3 +38,109 @@
     text-align: center;
   }
 }
+
+// A circular group glyph reused in the list, the header, and modals.
+.GroupMessages-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 32px;
+  min-height: 32px;
+  border-radius: 50%;
+  background: var(--control-bg, rgba(0, 0, 0, 0.08));
+  color: var(--muted-color);
+  font-size: 18px;
+  line-height: 1;
+
+  .GroupMessages-icon-emoji {
+    font-size: 1.1em;
+  }
+}
+
+.DialogListItem--group .DialogListItem-avatar {
+  width: 44px;
+  height: 44px;
+
+  .GroupMessages-icon {
+    font-size: 20px;
+  }
+}
+
+.DialogSection-header--group {
+  .GroupMessages-icon {
+    width: 48px;
+    height: 48px;
+    flex: 0 0 48px;
+    font-size: 22px;
+  }
+}
+
+.GroupManageModal {
+  .GroupManageModal-nameRow {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+
+    .GroupManageModal-icon {
+      flex: 0 0 56px;
+      text-align: center;
+    }
+  }
+
+  .GroupManageModal-participants {
+    margin: 6px 0 10px;
+    border: 1px solid var(--control-bg, rgba(0, 0, 0, 0.08));
+    border-radius: var(--border-radius);
+    overflow: hidden;
+  }
+
+  .GroupManageModal-participant {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 10px;
+
+    & + .GroupManageModal-participant {
+      border-top: 1px solid var(--control-bg, rgba(0, 0, 0, 0.05));
+    }
+
+    .Avatar {
+      width: 28px;
+      height: 28px;
+    }
+
+    .GroupManageModal-participant-name {
+      font-weight: 600;
+    }
+
+    .GroupManageModal-participant-actions {
+      margin-left: auto;
+      display: flex;
+      gap: 2px;
+    }
+  }
+
+  .GroupManageModal-role {
+    font-size: 12px;
+    padding: 1px 7px;
+    border-radius: 999px;
+    background: var(--control-bg, rgba(0, 0, 0, 0.08));
+    color: var(--muted-color);
+
+    &.GroupManageModal-role--owner {
+      background: var(--primary-color);
+      color: #fff;
+    }
+
+    &.GroupManageModal-role--moderator {
+      background: var(--secondary-color, #557);
+      color: #fff;
+    }
+  }
+
+  .GroupManageModal-add {
+    margin-top: 4px;
+  }
+}

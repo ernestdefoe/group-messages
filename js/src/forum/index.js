@@ -4,6 +4,7 @@ import Button from 'flarum/common/components/Button';
 import DialogsDropdown from 'ext:flarum/messages/forum/components/DialogsDropdown';
 
 import GroupComposeModal from './components/GroupComposeModal';
+import applyGroupRendering from './groupRendering';
 
 // Group Messages — forum frontend. Phase 4 (in progress): the group compose
 // flow. Further slices add group-aware list/header rendering, participant
@@ -13,6 +14,9 @@ import GroupComposeModal from './components/GroupComposeModal';
 // so it's safe to extend at initializer time — unlike MessagesPageHero.
 app.initializers.add('ernestdefoe-group-messages', () => {
   if (!('flarum-messages' in flarum.extensions) || !DialogsDropdown) return;
+
+  // Group-aware dialog list item, conversation header, and "…" control menu.
+  applyGroupRendering();
 
   // Prepend a "New group message" action to the messages dropdown.
   override(DialogsDropdown.prototype, 'getContent', function (original) {
