@@ -144,3 +144,83 @@
     margin-top: 4px;
   }
 }
+
+// Reactions bar under a dialog message.
+.GroupReactions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px;
+  margin-top: 2px;
+
+  .GroupReactions-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 1px 8px;
+    border: 1px solid var(--control-bg, rgba(0, 0, 0, 0.08));
+    border-radius: 999px;
+    background: transparent;
+    color: var(--text-color);
+    font-size: 13px;
+    line-height: 20px;
+    cursor: pointer;
+    transition: background 0.1s, border-color 0.1s;
+
+    &:hover {
+      background: var(--control-bg, rgba(0, 0, 0, 0.05));
+    }
+
+    &.GroupReactions-pill--mine {
+      border-color: var(--primary-color);
+      background: fade(@primary-color, 12%);
+    }
+
+    .GroupReactions-count {
+      color: var(--muted-color);
+      font-size: 12px;
+    }
+  }
+
+  .GroupReactions-add {
+    position: relative;
+    display: inline-flex;
+  }
+
+  .GroupReactions-addButton {
+    border: none;
+    background: transparent;
+    color: var(--muted-color);
+    padding: 2px 6px;
+    border-radius: 999px;
+    cursor: pointer;
+
+    &:hover {
+      background: var(--control-bg, rgba(0, 0, 0, 0.05));
+      color: var(--text-color);
+    }
+  }
+
+  // Lays the emoji palette out in a row inside Flarum's Dropdown-menu, which
+  // already provides positioning, background and shadow.
+  &.GroupReactions-picker,
+  .GroupReactions-picker {
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    min-width: 0;
+  }
+
+  .GroupReactions-pickerEmoji {
+    border: none;
+    background: transparent;
+    font-size: 18px;
+    padding: 3px 5px;
+    border-radius: var(--border-radius);
+    cursor: pointer;
+
+    &:hover {
+      background: var(--control-bg, rgba(0, 0, 0, 0.08));
+    }
+  }
+}

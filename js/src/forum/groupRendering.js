@@ -7,6 +7,7 @@ import Button from 'flarum/common/components/Button';
 import humanTime from 'flarum/common/helpers/humanTime';
 
 import GroupManageModal from './components/GroupManageModal';
+import GroupReactions from './components/GroupReactions';
 
 // flarum/messages' DialogListItem, DialogSection and MessageStream live in an
 // async chunk (only DialogsDropdown is in the main bundle), so they're
@@ -96,6 +97,13 @@ export default function applyGroupRendering() {
         </Button>,
         50
       );
+    });
+  });
+
+  // ----- Reactions bar under every dialog message.
+  reg.onLoad('flarum-messages', 'forum/components/Message', (Message) => {
+    extend(Message.prototype, 'footerItems', function (items) {
+      items.add('groupReactions', <GroupReactions message={this.attrs.message} />, 5);
     });
   });
 }
