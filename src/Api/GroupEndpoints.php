@@ -17,13 +17,21 @@ use Tobyz\JsonApiServer\Exception\BadRequestException;
  * the dialog as {id} (so $context->model resolves it and ->can() runs
  * GroupDialogPolicy against it) and returns the mutated Dialog, which the
  * resource serializes back to the client.
+ *
+ * Injectable: the manager is constructor-injected (resolved once when the
+ * resource schema is built) rather than pulled from the container per request.
  */
 class GroupEndpoints
 {
+    public function __construct(
+        protected GroupDialogManager $manager
+    ) {
+    }
+
     /**
      * @return list<Endpoint\Endpoint>
      */
-    public static function get(): array
+    public function get(): array
     {
         return [
             // Create a group. Mirrors the DM gate (sendAnyMessage); the
@@ -37,7 +45,7 @@ class GroupEndpoints
 
                     $attrs = static::attributes($context);
 
-                    $dialog = static::manager()->create(
+                    $dialog = $this->manager->create(
                         $actor,
                         static::ids($attrs['userIds'] ?? []),
                         $attrs['title'] ?? null,
@@ -60,7 +68,7 @@ class GroupEndpoints
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
                     $attrs = static::attributes($context);
-                    $manager = static::manager();
+                    $manager = $this->manager;
 
                     if (array_key_exists('title', $attrs)) {
                         $manager->rename($dialog, $attrs['title']);
@@ -81,7 +89,7 @@ class GroupEndpoints
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
                     $ids = static::ids(static::attributes($context)['userIds'] ?? []);
-                    static::manager()->addParticipants($dialog, $ids);
+                    $this->manager->addParticipants($dialog, $ids);
 
                     return $dialog->refresh();
                 }),
@@ -93,7 +101,7 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    $manager = static::manager();
+                    $manager = $this->manager;
                     $target = static::targetUser($context);
 
                     $role = $manager->roleOf($dialog, $target);
@@ -119,7 +127,7 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    static::manager()->leave($dialog, $context->getActor());
+                    $this->manager->leave($dialog, $context->getActor());
 
                     return $dialog;
                 }),
@@ -131,7 +139,7 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    static::manager()->promoteModerator($dialog, static::targetUser($context));
+                    $this->manager->promoteModerator($dialog, static::targetUser($context));
 
                     return $dialog->refresh();
                 }),
@@ -143,16 +151,11 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    static::manager()->demoteModerator($dialog, static::targetUser($context));
+                    $this->manager->demoteModerator($dialog, static::targetUser($context));
 
                     return $dialog->refresh();
                 }),
         ];
-    }
-
-    protected static function manager(): GroupDialogManager
-    {
-        return resolve(GroupDialogManager::class);
     }
 
     /** @return array<string, mixed> */

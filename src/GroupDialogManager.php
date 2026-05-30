@@ -3,6 +3,7 @@
 namespace Ernestdefoe\GroupMessages;
 
 use Carbon\Carbon;
+use Flarum\Locale\TranslatorInterface;
 use Flarum\Messages\Dialog;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
@@ -20,6 +21,11 @@ class GroupDialogManager
     public const ROLE_MODERATOR = 'moderator';
     public const ROLE_MEMBER = 'member';
 
+    public function __construct(
+        protected TranslatorInterface $translator
+    ) {
+    }
+
     /**
      * Create a group dialog owned by $actor with the given other participants.
      * Participants are attached the same way flarum/messages attaches DM users
@@ -34,7 +40,7 @@ class GroupDialogManager
 
         if (count($others) < 2) {
             throw new \Flarum\Foundation\ValidationException([
-                'users' => app('translator')->trans('ernestdefoe-group-messages.lib.error.min_participants'),
+                'users' => $this->translator->trans('ernestdefoe-group-messages.lib.error.min_participants'),
             ]);
         }
 
@@ -132,7 +138,14 @@ class GroupDialogManager
         $dialog->moderators()->detach($user->id);
     }
 
-    /** Returns 'owner' | 'moderator' | 'member' | null (not a participant). */
+    /**
+     * Returns 'owner' | 'moderator' | 'member' | null (not a participant).
+     *
+     * Reads the `moderators`/`users` relations as loaded collections (rather
+     * than firing exists() queries) so that when they're eager-loaded for a
+     * serialized list this costs no extra queries. On the management endpoints
+     * the relations simply lazy-load once on first access.
+     */
     public function roleOf(Dialog $dialog, ?User $user): ?string
     {
         if (! $user || ! $user->exists) {
@@ -142,10 +155,11 @@ class GroupDialogManager
         if ($detail && (int) $detail->owner_id === (int) $user->id) {
             return self::ROLE_OWNER;
         }
-        if ($dialog->moderators()->where('users.id', $user->id)->exists()) {
+        $isParticipant = fn ($collection) => $collection->contains(fn (User $u) => (int) $u->id === (int) $user->id);
+        if ($isParticipant($dialog->moderators)) {
             return self::ROLE_MODERATOR;
         }
-        if ($dialog->users()->where('users.id', $user->id)->exists()) {
+        if ($isParticipant($dialog->users)) {
             return self::ROLE_MEMBER;
         }
         return null;
@@ -161,9 +175,15 @@ class GroupDialogManager
         return $this->roleOf($dialog, $user) === self::ROLE_OWNER;
     }
 
+    /**
+     * The group's metadata row. Reads the `groupDetail` relation so the lookup
+     * is memoized on the Dialog instance (Eloquent caches a loaded relation) and
+     * is satisfied for free when `groupDetail` is eager-loaded for a list —
+     * instead of a fresh SELECT on every field getter that needs it.
+     */
     public function detail(Dialog $dialog): ?GroupDialog
     {
-        return GroupDialog::query()->find($dialog->id);
+        return $dialog->groupDetail;
     }
 
     /** @param int[] $ids @return int[] */

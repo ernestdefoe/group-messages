@@ -16,9 +16,9 @@ class MessageFields
     public static function added(): array
     {
         return [
-            // Aggregated reactions: [{ reaction, count, mine }]. Uses the
-            // eager-loaded `reactions` relation (see the endpoint mutation in
-            // extend.php) so a message list isn't N+1.
+            // Aggregated reactions: [{ reaction, count, mine }]. The `reactions`
+            // relation is eager-loaded on the message list/show endpoints (see
+            // the ->eagerLoad() in extend.php), so reading it here is not N+1.
             Schema\Arr::make('reactions')
                 ->get(function (DialogMessage $message, Context $context) {
                     $actorId = (int) $context->getActor()->id;

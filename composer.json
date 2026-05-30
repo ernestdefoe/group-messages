@@ -35,10 +35,7 @@
         "name": "fas fa-users",
         "backgroundColor": "#586bd8",
         "color": "#ffffff"
-      },
-      "optional-dependencies": [
-        "flarum/messages"
-      ]
+      }
     },
     "flarum-cli": {
       "modules": {

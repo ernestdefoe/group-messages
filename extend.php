@@ -17,9 +17,20 @@ use Flarum\User\User;
 // Register the 'group' dialog type alongside flarum/messages' built-in
 // 'direct'. DialogResource validates the type against Dialog::$types
 // (->in(Dialog::$types)), so without this the API rejects type=group.
-// flarum/messages is a hard dependency, but guard anyway so a half-installed
-// state can't fatal the boot.
-if (class_exists(Dialog::class) && ! in_array('group', Dialog::$types, true)) {
+//
+// COMPATIBILITY NOTE: flarum/messages exposes no extender for registering
+// dialog types, so this appends to its static $types array directly at boot —
+// the one place this extension reaches into flarum/messages internals. If a
+// future release changes the validation strategy or removes the property,
+// revisit here (ideally replace with a `Messages::addDialogType()` extender if
+// one is added upstream). The guards below keep a half-installed state or an
+// upstream API change from fataling the boot, and stop a double-registration
+// if two extensions both append 'group'.
+if (class_exists(Dialog::class)
+    && property_exists(Dialog::class, 'types')
+    && is_array(Dialog::$types)
+    && ! in_array('group', Dialog::$types, true)
+) {
     Dialog::$types[] = 'group';
 }
 
@@ -42,15 +53,21 @@ return [
         ->hasOne('replyRecord', DialogMessageReply::class, 'message_id'),
 
     // Reaction (react/unreact) endpoints + reaction/reply fields on messages.
+    // Eager-load reactions/replyRecord on list+show so a message list isn't N+1.
     (new Extend\ApiResource(DialogMessageResource::class))
         ->endpoints(fn () => MessageEndpoints::get())
-        ->fields(fn () => MessageFields::added()),
+        ->fields(fn () => MessageFields::added())
+        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['reactions', 'replyRecord'])),
 
-    // Group create + management endpoints on the dialogs resource.
+    // Group create + management endpoints on the dialogs resource. GroupFields/
+    // GroupEndpoints are injectable (resolved once here, not per request), and
+    // the group metadata relations are eager-loaded on list+show so the field
+    // getters read hydrated relations instead of re-querying per dialog.
     (new Extend\ApiResource(DialogResource::class))
-        ->endpoints(fn () => GroupEndpoints::get())
-        ->fields(fn () => GroupFields::added())
-        ->field('title', GroupFields::titleMutator()),
+        ->endpoints(fn () => resolve(GroupEndpoints::class)->get())
+        ->fields(fn () => resolve(GroupFields::class)->added())
+        ->field('title', fn ($field) => resolve(GroupFields::class)->titleMutator()($field))
+        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['groupDetail', 'moderators', 'users'])),
 
     (new Extend\Policy())
         ->modelPolicy(Dialog::class, GroupDialogPolicy::class),
