@@ -84,6 +84,13 @@ php flarum cache:clear
 - [GitHub](https://github.com/ernestdefoe/group-messages)
 - [Report an issue](https://github.com/ernestdefoe/group-messages/issues)
 
+## Support
+
+Questions, bug reports, and feature requests:
+
+- **Support forum:** https://ernestdefoe.online
+- **Issues:** https://github.com/ernestdefoe/group-messages/issues
+
 ## License
 
 This extension is licensed under the [MIT License](LICENSE.md).
