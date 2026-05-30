@@ -4,6 +4,7 @@ namespace Ernestdefoe\GroupMessages;
 
 use Ernestdefoe\GroupMessages\Access\GroupDialogPolicy;
 use Ernestdefoe\GroupMessages\Api\GroupEndpoints;
+use Ernestdefoe\GroupMessages\Api\GroupFields;
 use Flarum\Extend;
 use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
@@ -33,7 +34,9 @@ return [
 
     // Group create + management endpoints on the dialogs resource.
     (new Extend\ApiResource(DialogResource::class))
-        ->endpoints(fn () => GroupEndpoints::get()),
+        ->endpoints(fn () => GroupEndpoints::get())
+        ->fields(fn () => GroupFields::added())
+        ->field('title', GroupFields::titleMutator()),
 
     (new Extend\Policy())
         ->modelPolicy(Dialog::class, GroupDialogPolicy::class),
