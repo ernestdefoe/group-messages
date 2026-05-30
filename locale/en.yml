@@ -6,7 +6,9 @@ ernestdefoe-group-messages:
       name_label: Group name
       name_placeholder: Name this group (optional)
       recipients_label: Add people
+      message_placeholder: Write the first message…
       create_button: Create group
+      create_error: Couldn't create the group. Please try again.
     dialog:
       participants: "{count} participants"
       group_fallback_title: Group message

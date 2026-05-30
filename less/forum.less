@@ -1,1 +1,40 @@
-// Group Messages — forum styles. Populated in the frontend phase.
+// Group Messages — forum styles.
+
+.DialogsDropdown-newGroup {
+  padding: 8px 8px 4px;
+  border-bottom: 1px solid var(--control-bg, rgba(0, 0, 0, 0.05));
+}
+
+.GroupComposeModal {
+  .GroupComposeModal-recipients {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    align-items: center;
+  }
+
+  .GroupComposeModal-recipient {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 3px 6px 3px 4px;
+    border-radius: 999px;
+    background: var(--control-bg, rgba(0, 0, 0, 0.06));
+    font-size: 13px;
+
+    .Avatar {
+      width: 22px;
+      height: 22px;
+    }
+  }
+
+  .GroupComposeModal-nameRow {
+    display: flex;
+    gap: 8px;
+  }
+
+  .GroupComposeModal-icon {
+    flex: 0 0 56px;
+    text-align: center;
+  }
+}

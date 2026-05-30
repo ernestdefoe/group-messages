@@ -1,8 +1,32 @@
 import app from 'flarum/forum/app';
+import { override } from 'flarum/common/extend';
+import Button from 'flarum/common/components/Button';
+import DialogsDropdown from 'ext:flarum/messages/forum/components/DialogsDropdown';
 
-// Group Messages — forum frontend. UI (group compose modal, participant
-// management, group-aware dialog rendering, read receipts) is wired up in
-// later phases. This initializer keeps the bundle valid in the meantime.
+import GroupComposeModal from './components/GroupComposeModal';
+
+// Group Messages — forum frontend. Phase 4 (in progress): the group compose
+// flow. Further slices add group-aware list/header rendering, participant
+// management, reactions, reply/quote, and "seen by".
+//
+// DialogsDropdown lives in flarum/messages' MAIN bundle (not an async chunk),
+// so it's safe to extend at initializer time — unlike MessagesPageHero.
 app.initializers.add('ernestdefoe-group-messages', () => {
-  // Phase 4: register the group compose flow and dialog overrides here.
+  if (!('flarum-messages' in flarum.extensions) || !DialogsDropdown) return;
+
+  // Prepend a "New group message" action to the messages dropdown.
+  override(DialogsDropdown.prototype, 'getContent', function (original) {
+    return [
+      <div className="DialogsDropdown-newGroup" key="gm-new-group">
+        <Button
+          className="Button Button--block Button--link hasIcon"
+          icon="fas fa-users"
+          onclick={() => app.modal.show(GroupComposeModal)}
+        >
+          {app.translator.trans('ernestdefoe-group-messages.forum.compose.group_button')}
+        </Button>
+      </div>,
+      original(),
+    ];
+  });
 });
