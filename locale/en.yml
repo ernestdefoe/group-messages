@@ -37,7 +37,6 @@ ernestdefoe-group-messages:
       role_owner: Owner
       role_moderator: Moderator
       role_member: Member
-      left_message: "{username} left the group"
   lib:
     error:
       generic: Something went wrong. Please try again.

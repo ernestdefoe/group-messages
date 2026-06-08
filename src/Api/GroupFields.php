@@ -122,18 +122,20 @@ class GroupFields
     /**
      * @return int[]
      *
-     * Kept as a pivot query: flarum/messages' users() relation has no
-     * withPivot('last_read_message_id'), so the read state isn't available on
-     * the loaded collection. One indexed query per group dialog.
+     * Reads receipts off the eager-loaded `readStates` relation (participants
+     * carrying the dialog_user pivot's last_read_message_id) so a dialog list
+     * doesn't fire a pivot query per row — see the relation in extend.php.
      */
     protected function seenBy(Dialog $dialog): array
     {
         if ($dialog->type !== 'group' || ! $dialog->last_message_id) {
             return [];
         }
-        return array_map('intval', $dialog->users()
-            ->wherePivot('last_read_message_id', '>=', $dialog->last_message_id)
-            ->pluck('users.id')
-            ->all());
+        $lastMessageId = (int) $dialog->last_message_id;
+        return $dialog->readStates
+            ->filter(fn ($u) => (int) ($u->pivot->last_read_message_id ?? 0) >= $lastMessageId)
+            ->map(fn ($u) => (int) $u->id)
+            ->values()
+            ->all();
     }
 }

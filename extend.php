@@ -34,6 +34,14 @@ if (class_exists(Dialog::class)
     Dialog::$types[] = 'group';
 }
 
+// Lazily resolve a class at most once per request — the dialog-resource
+// closures below only run for API requests, so this avoids resolving GroupFields
+// twice (fields + title mutator) and never resolves on non-API page loads.
+$resolved = [];
+$once = function (string $class) use (&$resolved) {
+    return $resolved[$class] ??= resolve($class);
+};
+
 return [
     (new Extend\Frontend('forum'))
         ->js(__DIR__ . '/js/dist/forum.js')
@@ -43,9 +51,16 @@ return [
 
     // Companion relations on flarum/messages' Dialog. groupDetail holds the
     // name/icon/owner for group dialogs; moderators are the promoted managers.
+    // readStates mirrors the participants but WITH the dialog_user pivot's
+    // last_read_message_id, which flarum/messages' own users() relation omits —
+    // eager-loading it lets seenBy() read receipts off a hydrated collection
+    // instead of firing a pivot query per dialog (the old N+1).
     (new Extend\Model(Dialog::class))
         ->hasOne('groupDetail', GroupDialog::class, 'dialog_id')
-        ->belongsToMany('moderators', User::class, 'group_dialog_moderators', 'dialog_id', 'user_id'),
+        ->belongsToMany('moderators', User::class, 'group_dialog_moderators', 'dialog_id', 'user_id')
+        ->relationship('readStates', fn (Dialog $dialog) => $dialog
+            ->belongsToMany(User::class, 'dialog_user', 'dialog_id', 'user_id')
+            ->withPivot('last_read_message_id')),
 
     // Reaction + reply relations on dialog messages.
     (new Extend\Model(DialogMessage::class))
@@ -60,14 +75,16 @@ return [
         ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['reactions', 'replyRecord'])),
 
     // Group create + management endpoints on the dialogs resource. GroupFields/
-    // GroupEndpoints are injectable (resolved once here, not per request), and
-    // the group metadata relations are eager-loaded on list+show so the field
-    // getters read hydrated relations instead of re-querying per dialog.
+    // GroupEndpoints are resolved AT MOST ONCE per request via $once() (the
+    // resource-building closures only run for API requests, and GroupFields was
+    // previously resolved twice — for fields() and the title mutator). The group
+    // metadata relations are eager-loaded on list+show so the field getters read
+    // hydrated relations instead of re-querying per dialog.
     (new Extend\ApiResource(DialogResource::class))
-        ->endpoints(fn () => resolve(GroupEndpoints::class)->get())
-        ->fields(fn () => resolve(GroupFields::class)->added())
-        ->field('title', fn ($field) => resolve(GroupFields::class)->titleMutator()($field))
-        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['groupDetail', 'moderators', 'users'])),
+        ->endpoints(fn () => $once(GroupEndpoints::class)->get())
+        ->fields(fn () => $once(GroupFields::class)->added())
+        ->field('title', fn ($field) => $once(GroupFields::class)->titleMutator()($field))
+        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['groupDetail', 'moderators', 'users', 'readStates'])),
 
     (new Extend\Policy())
         ->modelPolicy(Dialog::class, GroupDialogPolicy::class),

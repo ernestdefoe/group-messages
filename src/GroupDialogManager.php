@@ -89,23 +89,29 @@ class GroupDialogManager
      */
     public function leave(Dialog $dialog, User $user): void
     {
-        $detail = $this->detail($dialog);
-        $isOwner = $detail && (int) $detail->owner_id === (int) $user->id;
+        // Removing the participant, reassigning ownership, and detaching/deleting
+        // are several writes that must not half-apply — wrap them in one
+        // transaction so a mid-sequence failure can't orphan the dialog
+        // (mirrors create()).
+        Dialog::query()->getConnection()->transaction(function () use ($dialog, $user) {
+            $detail = $this->detail($dialog);
+            $isOwner = $detail && (int) $detail->owner_id === (int) $user->id;
 
-        $this->removeParticipant($dialog, $user);
+            $this->removeParticipant($dialog, $user);
 
-        if ($isOwner && $detail) {
-            $heir = $dialog->moderators()->where('users.id', '!=', $user->id)->value('users.id')
-                ?? $dialog->users()->where('users.id', '!=', $user->id)->value('users.id');
+            if ($isOwner && $detail) {
+                $heir = $dialog->moderators()->where('users.id', '!=', $user->id)->value('users.id')
+                    ?? $dialog->users()->where('users.id', '!=', $user->id)->value('users.id');
 
-            if ($heir) {
-                $detail->owner_id = (int) $heir;
-                $detail->save();
-                $dialog->moderators()->detach($heir);
-            } else {
-                $dialog->delete();
+                if ($heir) {
+                    $detail->owner_id = (int) $heir;
+                    $detail->save();
+                    $dialog->moderators()->detach($heir);
+                } else {
+                    $dialog->delete();
+                }
             }
-        }
+        });
     }
 
     public function rename(Dialog $dialog, ?string $title): void
