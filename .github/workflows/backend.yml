@@ -8,7 +8,9 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php: ['8.2', '8.3', '8.4']
+        # 8.3 is the floor because flarum/core ^2.0 requires ^8.3;
+        # an 8.2 job could never get past `composer install`.
+        php: ['8.3', '8.4']
     steps:
       - uses: actions/checkout@v4
 

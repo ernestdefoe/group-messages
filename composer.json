@@ -16,7 +16,7 @@
     "source": "https://github.com/ernestdefoe/group-messages"
   },
   "require": {
-    "php": "^8.2",
+    "php": "^8.3",
     "flarum/core": "^2.0",
     "flarum/messages": "^2.0"
   },
