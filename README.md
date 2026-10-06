@@ -82,15 +82,12 @@ php flarum cache:clear
 
 - [Packagist](https://packagist.org/packages/ernestdefoe/group-messages)
 - [GitHub](https://github.com/ernestdefoe/group-messages)
-- [Report an issue](https://github.com/ernestdefoe/group-messages/issues)
-- [Discuss on discuss.flarum.org](https://discuss.flarum.org/d/39346-group-messages)
 
 ## Support
 
-Questions, bug reports, and feature requests:
-
-- **Support forum:** https://ernestdefoe.online
-- **Issues:** https://github.com/ernestdefoe/group-messages/issues
+- **Support forum:** [Group Messages on ernestdefoe.online](https://ernestdefoe.online/d/17)
+- **Flarum community:** [Group Messages on discuss.flarum.org](https://discuss.flarum.org/d/39346-group-messages)
+- **Bug reports:** [GitHub issues](https://github.com/ernestdefoe/group-messages/issues)
 
 ## License
 
