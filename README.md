@@ -83,6 +83,7 @@ php flarum cache:clear
 - [Packagist](https://packagist.org/packages/ernestdefoe/group-messages)
 - [GitHub](https://github.com/ernestdefoe/group-messages)
 - [Report an issue](https://github.com/ernestdefoe/group-messages/issues)
+- [Discuss on discuss.flarum.org](https://discuss.flarum.org/d/39346-group-messages)
 
 ## Support
 
