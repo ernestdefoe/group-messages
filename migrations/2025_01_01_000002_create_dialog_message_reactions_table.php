@@ -14,7 +14,9 @@ return Migration::createTable('dialog_message_reactions', function (Blueprint $t
     $table->string('reaction', 60);
     $table->dateTime('created_at')->nullable();
 
-    $table->unique(['message_id', 'user_id', 'reaction']);
+    // Named: the generated name (with the table prefix) passes MySQL's
+    // 64-character limit as soon as the prefix is longer than 5 characters.
+    $table->unique(['message_id', 'user_id', 'reaction'], 'gm_reactions_unique');
     $table->index('message_id');
 
     $table->foreign('message_id')->references('id')->on('dialog_messages')->cascadeOnDelete();
