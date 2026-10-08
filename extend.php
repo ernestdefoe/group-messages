@@ -28,7 +28,6 @@ use Flarum\User\User;
 // if two extensions both append 'group'.
 if (class_exists(Dialog::class)
     && property_exists(Dialog::class, 'types')
-    && is_array(Dialog::$types)
     && ! in_array('group', Dialog::$types, true)
 ) {
     Dialog::$types[] = 'group';

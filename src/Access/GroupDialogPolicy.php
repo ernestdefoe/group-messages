@@ -25,7 +25,7 @@ class GroupDialogPolicy extends AbstractPolicy
     }
 
     /** Rename, set icon, add/remove members — owner or moderator. */
-    public function editGroup(User $actor, Dialog $dialog)
+    public function editGroup(User $actor, Dialog $dialog): ?string
     {
         return $this->isGroup($dialog) && $this->groups->isManager($dialog, $actor)
             ? $this->allow()
@@ -33,7 +33,7 @@ class GroupDialogPolicy extends AbstractPolicy
     }
 
     /** Promote/demote moderators — owner only. */
-    public function manageModerators(User $actor, Dialog $dialog)
+    public function manageModerators(User $actor, Dialog $dialog): ?string
     {
         return $this->isGroup($dialog) && $this->groups->isOwner($dialog, $actor)
             ? $this->allow()
@@ -41,7 +41,7 @@ class GroupDialogPolicy extends AbstractPolicy
     }
 
     /** Leave the group — any current participant. */
-    public function leaveGroup(User $actor, Dialog $dialog)
+    public function leaveGroup(User $actor, Dialog $dialog): ?string
     {
         return $this->isGroup($dialog) && $this->groups->roleOf($dialog, $actor) !== null
             ? $this->allow()

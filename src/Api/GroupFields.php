@@ -107,7 +107,7 @@ class GroupFields
         if ($dialog->type !== 'group') {
             return [];
         }
-        $ownerId = (int) ($this->detail($dialog)?->owner_id ?? 0);
+        $ownerId = (int) ($this->detail($dialog)->owner_id ?? 0);
         $moderatorIds = $dialog->moderators->map(fn ($u) => (int) $u->id)->all();
         $out = [];
         foreach ($dialog->users as $user) {
@@ -132,7 +132,7 @@ class GroupFields
             return [];
         }
         $lastMessageId = (int) $dialog->last_message_id;
-        return $dialog->readStates
+        return $dialog->getAttribute('readStates')
             ->filter(fn ($u) => (int) ($u->pivot->last_read_message_id ?? 0) >= $lastMessageId)
             ->map(fn ($u) => (int) $u->id)
             ->values()
