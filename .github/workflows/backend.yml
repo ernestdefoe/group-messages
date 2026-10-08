@@ -1,27 +1,12 @@
-name: Backend
+name: Group Messages PHP
 
 on: [workflow_dispatch, push, pull_request]
 
 jobs:
-  lint:
-    name: PHP ${{ matrix.php }} lint
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        # 8.3 is the floor because flarum/core ^2.0 requires ^8.3;
-        # an 8.2 job could never get past `composer install`.
-        php: ['8.3', '8.4']
-    steps:
-      - uses: actions/checkout@v4
+  run:
+    uses: flarum/framework/.github/workflows/REUSABLE_backend.yml@2.x
+    with:
+      enable_backend_testing: true
+      enable_phpstan: true
 
-      - name: Set up PHP
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: ${{ matrix.php }}
-          coverage: none
-
-      - name: Validate composer.json
-        run: composer validate
-
-      - name: Lint PHP sources
-        run: find src migrations extend.php -name '*.php' -print0 | xargs -0 -n1 -P4 php -l
+      backend_directory: .

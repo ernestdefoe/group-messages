@@ -30,11 +30,7 @@ app.initializers.add('ernestdefoe-group-messages', () => {
   override(DialogsDropdown.prototype, 'getContent', function (original) {
     return [
       <div className="DialogsDropdown-newGroup">
-        <Button
-          className="Button Button--block Button--link hasIcon"
-          icon="fas fa-users"
-          onclick={() => app.modal.show(GroupComposeModal)}
-        >
+        <Button className="Button Button--block Button--link hasIcon" icon="fas fa-users" onclick={() => app.modal.show(GroupComposeModal)}>
           {app.translator.trans('ernestdefoe-group-messages.forum.compose.group_button')}
         </Button>
       </div>,

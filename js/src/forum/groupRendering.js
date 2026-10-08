@@ -20,7 +20,9 @@ const reg = flarum.reg;
 /** A circular group glyph: the chosen emoji, or a fallback people icon. */
 export function groupIcon(dialog) {
   const emoji = (dialog.attribute('iconUrl') || '').trim();
-  return <span className="GroupMessages-icon">{emoji ? <span className="GroupMessages-icon-emoji">{emoji}</span> : <Icon name="fas fa-users" />}</span>;
+  return (
+    <span className="GroupMessages-icon">{emoji ? <span className="GroupMessages-icon-emoji">{emoji}</span> : <Icon name="fas fa-users" />}</span>
+  );
 }
 
 export default function applyGroupRendering() {

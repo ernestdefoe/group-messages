@@ -16,7 +16,7 @@ import extractText from 'flarum/common/utils/extractText';
 export default class GroupComposeModal extends FormModal {
   oninit(vnode) {
     super.oninit(vnode);
-    this.selected = [];                 // User[]
+    this.selected = []; // User[]
     this.groupName = Stream('');
     this.icon = Stream('');
     this.body = Stream('');
@@ -58,12 +58,7 @@ export default class GroupComposeModal extends FormModal {
         <div className="Form-group">
           <label>{app.translator.trans('ernestdefoe-group-messages.forum.compose.name_label')}</label>
           <div className="GroupComposeModal-nameRow">
-            <input
-              className="FormControl GroupComposeModal-icon"
-              maxlength="8"
-              placeholder="🙂"
-              bidi={this.icon}
-            />
+            <input className="FormControl GroupComposeModal-icon" maxlength="8" placeholder="🙂" bidi={this.icon} />
             <input
               className="FormControl"
               maxlength="150"

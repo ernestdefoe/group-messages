@@ -211,7 +211,11 @@ export default class GroupManageModal extends Modal {
         // the manager with the refreshed dialog.
         (ids.length
           ? app
-              .request({ method: 'POST', url: app.forum.attribute('apiUrl') + '/dialogs/' + dialog.id() + '/participants', body: { data: { attributes: { userIds: ids } } } })
+              .request({
+                method: 'POST',
+                url: app.forum.attribute('apiUrl') + '/dialogs/' + dialog.id() + '/participants',
+                body: { data: { attributes: { userIds: ids } } },
+              })
               .then(() => app.store.find('dialogs', dialog.id(), { include: 'users' }))
           : Promise.resolve(dialog)
         )
