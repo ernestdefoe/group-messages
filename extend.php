@@ -43,10 +43,10 @@ $once = function (string $class) use (&$resolved) {
 
 return [
     (new Extend\Frontend('forum'))
-        ->js(__DIR__ . '/js/dist/forum.js')
-        ->css(__DIR__ . '/less/forum.less'),
+        ->js(__DIR__.'/js/dist/forum.js')
+        ->css(__DIR__.'/less/forum.less'),
 
-    new Extend\Locales(__DIR__ . '/locale'),
+    new Extend\Locales(__DIR__.'/locale'),
 
     // Companion relations on flarum/messages' Dialog. groupDetail holds the
     // name/icon/owner for group dialogs; moderators are the promoted managers.

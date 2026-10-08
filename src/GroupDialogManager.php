@@ -168,6 +168,7 @@ class GroupDialogManager
         if ($isParticipant($dialog->users)) {
             return self::ROLE_MEMBER;
         }
+
         return null;
     }
 
@@ -197,12 +198,14 @@ class GroupDialogManager
     {
         $ids = array_map('intval', Arr::wrap($ids));
         $ids = array_filter($ids, fn ($id) => $id > 0 && $id !== $exclude);
+
         return array_values(array_unique($ids));
     }
 
     protected function normalizeTitle(?string $title): ?string
     {
         $title = trim((string) $title);
+
         return $title === '' ? null : mb_substr($title, 0, 150);
     }
 }

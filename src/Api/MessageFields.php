@@ -31,6 +31,7 @@ class MessageFields
                             $grouped[$key]['mine'] = true;
                         }
                     }
+
                     return array_values($grouped);
                 }),
 

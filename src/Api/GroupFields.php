@@ -54,6 +54,7 @@ class GroupFields
                     if ($dialog->type !== 'group') {
                         return null;
                     }
+
                     return $this->manager->roleOf($dialog, $context->getActor());
                 }),
 
@@ -81,11 +82,13 @@ class GroupFields
             return $field->get(function (Dialog $dialog, Context $context) {
                 if ($dialog->type === 'group') {
                     $title = $this->detail($dialog)?->title;
+
                     return $title
                         ?: $this->translator->trans('ernestdefoe-group-messages.forum.dialog.group_fallback_title');
                 }
 
                 $recipient = $dialog->recipient($context->getActor());
+
                 return $recipient
                     ? $this->translator->trans('flarum-messages.lib.dialog.title', ['{username}' => $recipient->display_name])
                     : '';
@@ -98,6 +101,7 @@ class GroupFields
         if ($dialog->type !== 'group') {
             return null;
         }
+
         return $this->manager->detail($dialog);
     }
 
@@ -116,6 +120,7 @@ class GroupFields
                 ? GroupDialogManager::ROLE_OWNER
                 : (in_array($id, $moderatorIds, true) ? GroupDialogManager::ROLE_MODERATOR : GroupDialogManager::ROLE_MEMBER);
         }
+
         return $out;
     }
 
@@ -132,6 +137,7 @@ class GroupFields
             return [];
         }
         $lastMessageId = (int) $dialog->last_message_id;
+
         return $dialog->getAttribute('readStates')
             ->filter(fn ($u) => (int) ($u->pivot->last_read_message_id ?? 0) >= $lastMessageId)
             ->map(fn ($u) => (int) $u->id)
