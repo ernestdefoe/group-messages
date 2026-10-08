@@ -6,6 +6,7 @@ import Icon from 'flarum/common/components/Icon';
 import Button from 'flarum/common/components/Button';
 import Avatar from 'flarum/common/components/Avatar';
 import humanTime from 'flarum/common/helpers/humanTime';
+import highlight from 'flarum/common/helpers/highlight';
 
 import GroupManageModal from './components/GroupManageModal';
 import GroupReactions from './components/GroupReactions';
@@ -32,29 +33,42 @@ export default function applyGroupRendering() {
       const dialog = this.attrs.dialog;
       if (dialog.type() !== 'group') return original(vnode);
 
+      const unread = dialog.unreadCount();
+      const actions = this.attrs.actions ? this.actionItems().toArray() : [];
+      // flarum/messages 2.0 says when the last message is the reader's own.
       const lastMessage = dialog.lastMessage();
+      const preview = this.preview ? this.preview() : lastMessage ? lastMessage.contentPlain()?.slice(0, 80) : '';
 
       return (
         <li
           className={classList('DialogListItem', 'DialogListItem--group', {
-            'DialogListItem--unread': dialog.unreadCount(),
+            'DialogListItem--unread': unread,
+            'DialogListItem--actions': actions.length,
             active: this.attrs.active,
           })}
         >
           <Link href={app.route.dialog(dialog)} className={classList('DialogListItem-button', { active: this.attrs.active })}>
             <div className="DialogListItem-avatar">
               {groupIcon(dialog)}
-              {!!dialog.unreadCount() && <div className="Bubble Bubble--primary">{dialog.unreadCount()}</div>}
+              {!!unread && (
+                <div className="Bubble Bubble--primary">
+                  <span aria-hidden="true">{unread}</span>
+                  <span className="sr-only">
+                    {app.translator.trans('ernestdefoe-group-messages.forum.dialog.unread_count_text', { count: unread })}
+                  </span>
+                </div>
+              )}
             </div>
             <div className="DialogListItem-content">
               <div className="DialogListItem-title">
                 <span className="DialogListItem-name">{dialog.title()}</span>
                 {humanTime(dialog.lastMessageAt())}
-                {this.attrs.actions && <div className="DialogListItem-actions">{this.actionItems().toArray()}</div>}
               </div>
-              <div className="DialogListItem-lastMessage">{lastMessage ? lastMessage.contentPlain()?.slice(0, 80) : ''}</div>
+              <div className="DialogListItem-lastMessage">{preview}</div>
             </div>
           </Link>
+          {/* Beside the link, not inside it, as flarum/messages 2.0 has it: a button nested in a link is neither to a browser nor a screen reader. */}
+          {!!actions.length && <div className="DialogListItem-actions">{actions}</div>}
         </li>
       );
     });
@@ -84,7 +98,8 @@ export default function applyGroupRendering() {
             </div>
             <div className="DialogSection-header-actions">{this.actionItems().toArray()}</div>
           </div>
-          {MessageStream && <MessageStream dialog={dialog} state={this.messages} />}
+          {/* `near` opens a permalink on its message in flarum/messages 2.0; rc.8 reads the route itself. */}
+          {MessageStream && <MessageStream dialog={dialog} state={this.messages} near={this.near} />}
         </div>
       );
     });
@@ -99,6 +114,27 @@ export default function applyGroupRendering() {
           {app.translator.trans('ernestdefoe-group-messages.forum.manage.title')}
         </Button>,
         50
+      );
+    });
+  });
+
+  // ----- Global search (flarum/messages 2.0): a group message is in the
+  // group, not a "conversation with" whichever member happens to be listed.
+  reg.onLoad('flarum-messages', 'forum/components/MessageSearchResult', (MessageSearchResult) => {
+    extend(MessageSearchResult.prototype, 'contentItems', function (items) {
+      const message = this.attrs.message;
+      const dialog = message.dialog();
+      if (!dialog || dialog.type() !== 'group' || !items.has('text')) return;
+
+      items.setContent(
+        'text',
+        <div className="MessageSearchResult-text">
+          <div className="MessageSearchResult-title">
+            <span className="MessageSearchResult-conversation">{dialog.title()}</span>
+            {humanTime(message.createdAt())}
+          </div>
+          <div className="MessageSearchResult-excerpt">{highlight(message.contentPlain() ?? '', this.highlightRegExp(), 175)}</div>
+        </div>
       );
     });
   });

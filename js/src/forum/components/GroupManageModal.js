@@ -6,6 +6,7 @@ import Stream from 'flarum/common/utils/Stream';
 import username from 'flarum/common/helpers/username';
 import extractText from 'flarum/common/utils/extractText';
 import UserSelectionModal from 'flarum/common/components/UserSelectionModal';
+import recipientRules from '../recipientRules';
 
 import { groupIcon } from '../groupRendering';
 
@@ -203,6 +204,7 @@ export default class GroupManageModal extends Modal {
     app.modal.show(UserSelectionModal, {
       title: app.translator.trans('ernestdefoe-group-messages.forum.manage.add_people'),
       selected: [],
+      ...recipientRules(),
       onsubmit: (users) => {
         const existing = new Set((dialog.users() || []).filter(Boolean).map((u) => u.id()));
         const ids = [...new Set(users.filter((u) => u && !existing.has(u.id())).map((u) => Number(u.id())))];

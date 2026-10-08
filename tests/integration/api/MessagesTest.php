@@ -55,14 +55,17 @@ class MessagesTest extends GroupMessagesTestCase
                 'attributes' => ['content' => 'Replying', 'replyToId' => $replyTo],
                 'relationships' => ['dialog' => ['data' => ['type' => 'dialogs', 'id' => '1']]],
             ]],
-        ]));
+            // Two messages inside flarum/messages 2.0's ten seconds.
+        ])->withAttribute('bypassThrottling', true));
 
         $response = $send(10);
         $body = json_decode((string) $response->getBody(), true);
         $this->assertSame(201, $response->getStatusCode(), json_encode($body));
         $this->assertSame(10, $body['data']['attributes']['replyToId']);
 
-        $body = json_decode((string) $send(20)->getBody(), true);
+        $response = $send(20);
+        $body = json_decode((string) $response->getBody(), true);
+        $this->assertSame(201, $response->getStatusCode(), json_encode($body));
         $this->assertNull($body['data']['attributes']['replyToId'], 'Message 20 is in another conversation');
     }
 

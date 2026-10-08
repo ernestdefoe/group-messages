@@ -3,11 +3,13 @@
 namespace Ernestdefoe\GroupMessages;
 
 use Ernestdefoe\GroupMessages\Access\GroupDialogPolicy;
+use Ernestdefoe\GroupMessages\Api\GroupCreationThrottler;
 use Ernestdefoe\GroupMessages\Api\GroupEndpoints;
 use Ernestdefoe\GroupMessages\Api\GroupFields;
 use Ernestdefoe\GroupMessages\Api\MessageEndpoints;
 use Ernestdefoe\GroupMessages\Api\MessageFields;
 use Flarum\Extend;
+use Flarum\Messages\Access\MessagingPermission;
 use Flarum\Messages\Api\Resource\DialogMessageResource;
 use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
@@ -84,6 +86,18 @@ return [
         ->fields(fn () => $once(GroupFields::class)->added())
         ->field('title', fn ($field) => $once(GroupFields::class)->titleMutator()($field))
         ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['groupDetail', 'moderators', 'users', 'readStates'])),
+
+    // flarum/messages 2.0.0 decides who may write in a dialog with a
+    // `canSendMessage` field (it hides the composer). Groups answer it with
+    // their own rule; on rc.8 the field doesn't exist.
+    (new Extend\Conditional())
+        ->when(class_exists(MessagingPermission::class), fn () => [
+            (new Extend\ApiResource(DialogResource::class))
+                ->field('canSendMessage', fn ($field) => $once(GroupFields::class)->canSendMessageMutator()($field)),
+        ]),
+
+    (new Extend\ThrottleApi())
+        ->set('groupMessagesNewGroups', GroupCreationThrottler::class),
 
     (new Extend\Policy())
         ->modelPolicy(Dialog::class, GroupDialogPolicy::class),

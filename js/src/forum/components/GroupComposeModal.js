@@ -2,6 +2,7 @@ import app from 'flarum/forum/app';
 import FormModal from 'flarum/common/components/FormModal';
 import Button from 'flarum/common/components/Button';
 import UserSelectionModal from 'flarum/common/components/UserSelectionModal';
+import recipientRules from '../recipientRules';
 import Stream from 'flarum/common/utils/Stream';
 import Avatar from 'flarum/common/components/Avatar';
 import username from 'flarum/common/helpers/username';
@@ -95,6 +96,7 @@ export default class GroupComposeModal extends FormModal {
     app.modal.show(UserSelectionModal, {
       title: app.translator.trans('ernestdefoe-group-messages.forum.compose.recipients_label', {}, true),
       selected: this.selected,
+      ...recipientRules(),
       onsubmit: (users) => {
         // Drop the actor and de-duplicate by id (the picker can momentarily
         // hand back the same user twice while its list re-renders).

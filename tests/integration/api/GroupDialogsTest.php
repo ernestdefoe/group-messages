@@ -166,8 +166,9 @@ class GroupDialogsTest extends GroupMessagesTestCase
     #[Test]
     public function the_list_serializes_groups_without_a_query_per_dialog()
     {
+        // More than flarum/messages 2.0's hourly cap on new conversations.
         foreach (range(3, 12) as $n) {
-            $this->call('POST', '/api/dialogs/group', 4, ['userIds' => [2, 3, 5], 'title' => "Group $n"]);
+            $this->assertSame(200, $this->call('POST', '/api/dialogs/group', 4, ['userIds' => [2, 3, 5], 'title' => "Group $n"], bypassThrottling: true)[0]);
         }
         $this->linkLastMessages();
 

@@ -74,25 +74,45 @@ class GroupFields
 
     /**
      * Mutator for the existing `title` field so group dialogs show their name
-     * instead of flarum/messages' "Conversation with {recipient}".
+     * instead of flarum/messages' "Conversation with {recipient}". Every other
+     * dialog keeps flarum/messages' own title. On rc.8 that one fails when the
+     * other member has deleted their account, so this names them as deleted,
+     * as flarum/messages 2.0.0 does.
      */
     public function titleMutator(): callable
     {
-        return function ($field) {
-            return $field->get(function (Dialog $dialog, Context $context) {
-                if ($dialog->type === 'group') {
-                    $title = $this->detail($dialog)?->title;
+        return function (Schema\Str $field) {
+            $original = clone $field;
 
-                    return $title
+            return $field->get(function (Dialog $dialog, Context $context) use ($original) {
+                if ($dialog->type === 'group') {
+                    return $this->detail($dialog)?->title
                         ?: $this->translator->trans('ernestdefoe-group-messages.forum.dialog.group_fallback_title');
                 }
 
-                $recipient = $dialog->recipient($context->getActor());
+                if (! $dialog->recipient($context->getActor())) {
+                    return $this->translator->trans('flarum-messages.lib.dialog.title', [
+                        '{username}' => $this->translator->trans('core.lib.username.deleted_text'),
+                    ]);
+                }
 
-                return $recipient
-                    ? $this->translator->trans('flarum-messages.lib.dialog.title', ['{username}' => $recipient->display_name])
-                    : '';
+                return $original->getValue($context);
             });
+        };
+    }
+
+    /**
+     * Mutator for flarum/messages 2.0.0's `canSendMessage`, which hides the
+     * composer: in a group, the same rule as GroupDialogPolicy::sendMessage.
+     */
+    public function canSendMessageMutator(): callable
+    {
+        return function (Schema\Boolean $field) {
+            $original = clone $field;
+
+            return $field->get(fn (Dialog $dialog, Context $context) => $dialog->type === 'group'
+                ? $this->manager->canSend($context->getActor(), $dialog)
+                : $original->getValue($context));
         };
     }
 

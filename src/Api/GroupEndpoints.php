@@ -85,11 +85,12 @@ class GroupEndpoints
                 ->authenticated()
                 ->can('editGroup')
                 ->action(function (Context $context) {
-                    $context->getActor()->assertCan('sendAnyMessage');
+                    $actor = $context->getActor();
+                    $actor->assertCan('sendAnyMessage');
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
                     $ids = static::ids(static::attributes($context)['userIds'] ?? []);
-                    $this->manager->addParticipants($dialog, $ids);
+                    $this->manager->addParticipants($dialog, $ids, $actor);
 
                     return $dialog->refresh();
                 }),

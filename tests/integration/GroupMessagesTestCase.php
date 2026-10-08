@@ -56,7 +56,7 @@ abstract class GroupMessagesTestCase extends TestCase
     }
 
     /** @return array{0: int, 1: mixed} */
-    protected function call(string $method, string $path, ?int $actor = null, ?array $attributes = null, array $query = []): array
+    protected function call(string $method, string $path, ?int $actor = null, ?array $attributes = null, array $query = [], bool $bypassThrottling = false): array
     {
         $options = $actor ? ['authenticatedAs' => $actor] : [];
         if ($attributes !== null) {
@@ -70,7 +70,7 @@ abstract class GroupMessagesTestCase extends TestCase
             $request = $this->request($method, $path, $options + ['cookiesFrom' => $session])->withHeader('X-CSRF-Token', $session->getHeaderLine('X-CSRF-Token'));
         }
 
-        $response = $this->send($request);
+        $response = $this->send($request->withAttribute('bypassThrottling', $bypassThrottling));
 
         return [$response->getStatusCode(), json_decode((string) $response->getBody(), true)];
     }

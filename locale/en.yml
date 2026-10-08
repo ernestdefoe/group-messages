@@ -2,6 +2,7 @@ ernestdefoe-group-messages:
   forum:
     compose:
       group_button: New group message
+      cannot_reply_text: Can't reply to messages
       group_title: New group message
       name_label: Group name
       name_placeholder: Name this group (optional)
@@ -13,6 +14,7 @@ ernestdefoe-group-messages:
       participants: "{count} participants"
       participant_count: "{count, plural, one {# person} other {# people}}"
       group_fallback_title: Group message
+      unread_count_text: "{count} unread"
       seen_by: Seen by {names}
       seen_by_count: "Seen by {count}"
     reactions:

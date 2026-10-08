@@ -3,7 +3,9 @@
 namespace Ernestdefoe\GroupMessages;
 
 use Carbon\Carbon;
+use Flarum\Foundation\ValidationException;
 use Flarum\Locale\TranslatorInterface;
+use Flarum\Messages\Access\MessagingPermission;
 use Flarum\Messages\Dialog;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
@@ -39,10 +41,12 @@ class GroupDialogManager
         $others = $this->cleanIds($userIds, $actor->id);
 
         if (count($others) < 2) {
-            throw new \Flarum\Foundation\ValidationException([
+            throw new ValidationException([
                 'users' => $this->translator->trans('ernestdefoe-group-messages.lib.error.min_participants'),
             ]);
         }
+
+        $this->assertCanBeAdded($actor, $others);
 
         return Dialog::query()->getConnection()->transaction(function () use ($actor, $others, $title, $iconUrl) {
             $dialog = new Dialog();
@@ -64,16 +68,78 @@ class GroupDialogManager
     }
 
     /** @param int[] $userIds */
-    public function addParticipants(Dialog $dialog, array $userIds): void
+    public function addParticipants(Dialog $dialog, array $userIds, User $actor): void
     {
         $existing = $dialog->users()->pluck('users.id')->all();
         $toAdd = array_values(array_diff($this->cleanIds($userIds), array_map('intval', $existing)));
         if (! $toAdd) {
             return;
         }
+
+        $this->assertCanBeAdded($actor, $toAdd);
+
         $dialog->users()->syncWithoutDetaching(
             array_fill_keys($toAdd, ['joined_at' => Carbon::now()])
         );
+    }
+
+    /**
+     * The checks flarum/messages makes on a new conversation's recipients,
+     * before anything is written. Everyone must exist and be visible to the
+     * actor (an unknown id used to reach the database and fail on the foreign
+     * key). From flarum/messages 2.0.0, nobody another extension rules out
+     * (flarum/gdpr does for anonymised accounts), and nobody who couldn't
+     * reply, unless the actor may message users without messaging permission.
+     *
+     * @param int[] $userIds
+     */
+    public function assertCanBeAdded(User $actor, array $userIds): void
+    {
+        $users = User::whereVisibleTo($actor)->whereIn('id', $userIds)->with('groups')->get();
+
+        if ($users->count() !== count($userIds)) {
+            throw new ValidationException([
+                'users' => str_replace(':attribute', 'users', $this->translator->trans('validation.exists')),
+            ]);
+        }
+
+        if (! class_exists(MessagingPermission::class)) {
+            return;
+        }
+
+        $mayMessageAnyone = MessagingPermission::canMessageUsersWithoutPermission($actor);
+
+        foreach ($users as $user) {
+            if ($actor->cannot('message', $user)) {
+                throw new ValidationException([
+                    'users' => $this->translator->trans('flarum-messages.lib.recipient_unavailable_message', ['username' => $user->display_name]),
+                ]);
+            }
+
+            if (! $mayMessageAnyone && ! MessagingPermission::canReply($user)) {
+                throw new ValidationException([
+                    'users' => $this->translator->trans('flarum-messages.lib.recipient_cannot_reply_message', ['username' => $user->display_name]),
+                ]);
+            }
+        }
+    }
+
+    /**
+     * Whether the actor may write in a group they are in (flarum/messages
+     * 2.0.0). Its own rule, MessagingPermission::canSendIn(), refuses when any
+     * member can't reply, which is right for two people and wrong for a group:
+     * one member losing the permission would silence everyone else. In a group
+     * it is the sender's own permission that counts. Who can't reply is
+     * checked when people are added. Always false on rc.8, which has no such
+     * rule; GroupDialogPolicy then abstains.
+     */
+    public function canSend(User $actor, Dialog $dialog): bool
+    {
+        return class_exists(MessagingPermission::class)
+            && $dialog->users->contains(fn (User $user) => (int) $user->id === (int) $actor->id)
+            && ($dialog->getAttribute('anyone_can_reply')
+                || MessagingPermission::canMessageUsersWithoutPermission($actor)
+                || MessagingPermission::canReply($actor));
     }
 
     public function removeParticipant(Dialog $dialog, User $user): void
