@@ -94,7 +94,10 @@ return [
         ->endpoints(fn () => $once(GroupEndpoints::class)->get())
         ->fields(fn () => $once(GroupFields::class)->added())
         ->field('title', fn ($field) => $once(GroupFields::class)->titleMutator()($field))
-        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['groupDetail', 'moderators', 'users', 'readStates'])),
+        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint
+            ->eagerLoad(['groupDetail', 'moderators', 'users', 'readStates'])
+            // Each conversation's latest message carries its reactions and reply.
+            ->eagerLoadWhenIncluded(['lastMessage' => ['lastMessage.reactions', 'lastMessage.replyRecord']])),
 
     // flarum/messages 2.0.0 decides who may write in a dialog with a
     // `canSendMessage` field (it hides the composer). Groups answer it with
