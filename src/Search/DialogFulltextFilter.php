@@ -25,8 +25,9 @@ class DialogFulltextFilter extends AbstractFulltextFilter
 
         // `%` and `_` are what they say. The escape character is spelled out:
         // SQLite has no default one, and `!` means the same on every driver.
-        $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value).'%';
-        $matches = fn (Builder $query, string $column) => $query->whereRaw($query->getQuery()->getGrammar()->wrap($column)." like ? escape '!'", [$like]);
+        // Both sides lower-cased, as PostgreSQL's LIKE minds case.
+        $like = '%'.str_replace(['!', '%', '_'], ['!!', '!%', '!_'], mb_strtolower($value)).'%';
+        $matches = fn (Builder $query, string $column) => $query->whereRaw('lower('.$query->getQuery()->getGrammar()->wrap($column).") like ? escape '!'", [$like]);
         $actorId = $state->getActor()->id;
 
         $state->getQuery()->where(function (Builder $query) use ($matches, $actorId) {
