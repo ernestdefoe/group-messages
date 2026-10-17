@@ -15,6 +15,7 @@ use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
 use Flarum\Messages\DialogMessage;
 use Flarum\User\User;
+use Illuminate\Support\Arr;
 
 // Register the 'group' dialog type alongside flarum/messages' built-in
 // 'direct'. DialogResource validates the type against Dialog::$types
@@ -73,7 +74,15 @@ return [
     (new Extend\ApiResource(DialogMessageResource::class))
         ->endpoints(fn () => MessageEndpoints::get())
         ->fields(fn () => MessageFields::added())
-        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['reactions', 'replyRecord'])),
+        ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint->eagerLoad(['reactions', 'replyRecord']))
+        // A message search spans conversations, and each included group reads
+        // its members, detail, moderators and read states: loaded once for the page, not
+        // once per group. One conversation's stream has one dialog to load.
+        ->endpoint('index', fn ($endpoint) => $endpoint->eagerLoad(
+            fn (array $included, $context) => in_array('dialog', $included, true) && ! Arr::get($context->request->getQueryParams(), 'filter.dialog')
+                ? ['dialog.users', 'dialog.groupDetail', 'dialog.moderators', 'dialog.readStates']
+                : []
+        )),
 
     // Group create + management endpoints on the dialogs resource. GroupFields/
     // GroupEndpoints are resolved AT MOST ONCE per request via $once() (the
