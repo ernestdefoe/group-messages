@@ -26,6 +26,15 @@ ernestdefoe-group-messages:
       unknown: In reply to an earlier message
     quote:
       quote_button: Quote
+    search:
+      label: Search messages
+      placeholder: Search messages
+      placeholder_in: "Search {title}"
+      in: "In {title}"
+      all_label: Search all conversations
+      this_conversation: Search this conversation
+      empty: No messages match.
+      more: Load more
     manage:
       title: Group settings
       name_label: Group name & icon

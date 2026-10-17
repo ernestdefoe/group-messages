@@ -7,6 +7,7 @@ import GroupComposeModal from './components/GroupComposeModal';
 import applyGroupRendering from './groupRendering';
 import applyReply from './reply';
 import applyQuote from './quote';
+import applyMessageSearch from './messageSearch';
 
 // Group Messages — forum frontend. Phase 4 (in progress): the group compose
 // flow. Further slices add group-aware list/header rendering, participant
@@ -25,6 +26,9 @@ app.initializers.add('ernestdefoe-group-messages', () => {
 
   // Quote: insert a markdown blockquote of a message into the composer.
   applyQuote();
+
+  // Search: a field on the Messages page and "Search this conversation".
+  applyMessageSearch();
 
   // Prepend a "New group message" action to the messages dropdown.
   override(DialogsDropdown.prototype, 'getContent', function (original) {

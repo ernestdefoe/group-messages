@@ -334,3 +334,98 @@
     box-shadow: 0 0 0 1px var(--control-bg, rgba(0, 0, 0, 0.1));
   }
 }
+
+// Search on the Messages page: a field above the conversation list, whose
+// results take the list's place.
+.GroupMessagesSearch {
+  margin-bottom: 10px;
+
+  &-field {
+    position: relative;
+
+    .icon {
+      position: absolute;
+      top: 50%;
+      inset-inline-start: 12px;
+      transform: translateY(-50%);
+      color: var(--muted-color);
+      pointer-events: none;
+    }
+
+    .FormControl {
+      padding-inline-start: 34px;
+    }
+  }
+
+  &-scope {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+    margin-top: 6px;
+    padding-inline-start: 4px;
+    font-size: 0.85rem;
+    color: var(--muted-color);
+
+    span {
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  }
+}
+
+.GroupMessagesSearch-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+
+  .MessageSearchResult > a {
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+    padding: 10px;
+    border-radius: var(--border-radius);
+    color: var(--text-color);
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      background: var(--control-bg);
+    }
+  }
+
+  .MessageSearchResult .Avatar {
+    --size: 36px;
+    flex-shrink: 0;
+  }
+
+  .MessageSearchResult-conversation {
+    white-space: nowrap;
+  }
+
+  .MessageSearchResult-excerpt {
+    white-space: normal;
+    overflow-wrap: anywhere;
+    color: var(--muted-color);
+    font-size: 0.9rem;
+
+    mark {
+      background: none;
+      color: var(--text-color);
+      font-weight: bold;
+    }
+  }
+}
+
+.GroupMessagesSearch-empty {
+  padding: 20px 10px;
+  text-align: center;
+  color: var(--muted-color);
+}
+
+.GroupMessagesSearch-more {
+  padding: 10px;
+  text-align: center;
+}
