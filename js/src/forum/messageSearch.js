@@ -12,6 +12,7 @@ const reg = flarum.reg;
 const t = (key, params, text) => app.translator.trans('ernestdefoe-group-messages.forum.search.' + key, params, text);
 
 const PAGE = 20;
+const CONVERSATIONS = 5;
 const MIN_LENGTH = 2;
 const DELAY = 300;
 
@@ -24,6 +25,8 @@ const search = {
   query: '',
   /** The conversation being searched, or null for all of them. */
   scope: null,
+  /** Conversations with someone, or a group, whose name matches. */
+  dialogs: [],
   results: [],
   loading: false,
   more: false,
@@ -43,6 +46,7 @@ const search = {
 
     if (!this.active()) {
       this.run++;
+      this.dialogs = [];
       this.results = [];
       this.loading = false;
       this.more = false;
@@ -55,17 +59,36 @@ const search = {
 
   setScope(dialog) {
     this.scope = dialog;
+    this.dialogs = [];
     this.results = [];
     if (this.active()) this.set(this.query);
   },
 
   load(offset = 0) {
     const run = ++this.run;
-    const filter = { q: this.query.trim() };
+    const q = this.query.trim();
+    const filter = { q };
     if (this.scope) filter.dialog = this.scope.id();
 
     this.loading = true;
     m.redraw();
+
+    // Who a conversation is with is only asked once, with the first page of
+    // messages, and not within one conversation.
+    if (!offset && !this.scope) {
+      app.store
+        .find('dialogs', {
+          filter: { q },
+          page: { limit: CONVERSATIONS },
+          sort: '-lastMessageAt',
+          include: 'lastMessage.user,users.groups',
+        })
+        .then(
+          (dialogs) => run === this.run && (this.dialogs = dialogs),
+          () => {}
+        )
+        .finally(() => m.redraw());
+    }
 
     return app.store
       .find('dialog-messages', {
@@ -104,6 +127,13 @@ function field() {
         <input
           className="FormControl"
           type="search"
+          // Not a login field: no browser autofill, and no password manager
+          // offering a saved login in it.
+          autocomplete="off"
+          data-1p-ignore=""
+          data-lpignore="true"
+          data-bwignore="true"
+          data-form-type="other"
           value={search.query}
           placeholder={t(scope ? 'placeholder_in' : 'placeholder', { title: scope && scope.title() }, true)}
           aria-label={t('label', {}, true)}
@@ -132,12 +162,23 @@ function field() {
   );
 }
 
-function results() {
+function results(activeDialog) {
   const MessageSearchResult = reg.get('flarum-messages', 'forum/components/MessageSearchResult');
+  const DialogListItem = reg.get('flarum-messages', 'forum/components/DialogListItem');
   const query = search.query.trim().toLowerCase();
+  const headed = !search.scope && search.dialogs.length;
 
   return (
     <div className="DialogList GroupMessagesSearch-results" key="groupMessagesSearchResults">
+      {!!headed && [
+        <h4 className="GroupMessagesSearch-heading">{t('conversations')}</h4>,
+        <ul className="DialogList-list">
+          {search.dialogs.map((dialog) => (
+            <DialogListItem key={dialog.id()} dialog={dialog} active={activeDialog?.id() === dialog.id()} />
+          ))}
+        </ul>,
+        <h4 className="GroupMessagesSearch-heading">{t('messages')}</h4>,
+      ]}
       {search.results.length ? (
         <ul className="GroupMessagesSearch-list">
           {search.results.map((message) => (
@@ -145,7 +186,7 @@ function results() {
           ))}
         </ul>
       ) : search.loading ? null : (
-        <p className="GroupMessagesSearch-empty">{t('empty')}</p>
+        <p className="GroupMessagesSearch-empty">{t(headed || search.scope ? 'empty' : 'empty_all')}</p>
       )}
       {search.loading ? (
         <LoadingIndicator display="block" />
@@ -178,7 +219,7 @@ export default function applyMessageSearch() {
 
       (sidebar.children || []).forEach((child) => {
         if (child && child.key === 'list') {
-          children.push(field(), search.active() ? results() : child);
+          children.push(field(), search.active() ? results(this.selectedDialog()) : child);
         } else {
           children.push(child);
         }

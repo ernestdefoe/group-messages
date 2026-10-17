@@ -20,7 +20,7 @@ A [Flarum](https://flarum.org) extension that turns private messages into **grou
 - **Reply** — reply to a specific message, with a "replying to" indicator in the composer and an inline reference on the sent message.
 - **Quote** — drop a markdown blockquote of any message into the composer.
 - **Read receipts** — see small avatars of the participants who have read the latest message.
-- **Search** — a search box above your conversation list finds messages in every conversation you're part of; **Search this conversation** in a conversation's ⋯ menu narrows it to that one.
+- **Search** — a search box above your conversation list finds conversations by who they're with or a group's name, and messages by what they say, in every conversation you're part of; **Search this conversation** in a conversation's ⋯ menu narrows it to that one.
 
 Direct (1-on-1) messages are left completely untouched.
 
@@ -59,7 +59,7 @@ php flarum cache:clear
 - Open the **messages** dropdown (envelope icon) and choose **"New group message"** to start a group.
 - Inside a group, use the **"…"** menu → **Group settings** to rename it, change its icon, add or remove people, manage moderators, or leave.
 - Under each message you'll find the reaction picker, **Reply** and **Quote** actions.
-- Type in the search box on the Messages page to find a message; click a result to jump to it. To search one conversation, choose **Search this conversation** from its ⋯ menu.
+- Type in the search box on the Messages page to find a conversation by a person's username or a group's name, or a message by its text; click a result to open it. To search one conversation, choose **Search this conversation** from its ⋯ menu.
 
 ### Permissions
 

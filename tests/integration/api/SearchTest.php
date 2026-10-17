@@ -2,68 +2,67 @@
 
 namespace Ernestdefoe\GroupMessages\Tests\integration\api;
 
-use Carbon\Carbon;
 use Ernestdefoe\GroupMessages\Tests\integration\GroupMessagesTestCase;
 use PHPUnit\Framework\Attributes\Test;
 
 /**
- * The Messages page's search: flarum/messages' message search, narrowed to one
- * conversation when asked. A group's messages turn up for its members only.
+ * The Messages page's search box finds conversations by who they are with, or
+ * by a group's name — only ever the searcher's own.
  */
 class SearchTest extends GroupMessagesTestCase
 {
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $message = fn (int $id, int $dialog, int $number, string $text) => ['id' => $id, 'dialog_id' => $dialog, 'number' => $number, 'user_id' => 2, 'content' => "<t><p>$text</p></t>", 'created_at' => Carbon::now(), 'updated_at' => Carbon::now()];
-
-        $this->prepareDatabase([
-            'dialog_messages' => [
-                $message(11, 1, 2, 'Pizza tonight at eight'),
-                $message(12, 1, 3, 'Bring the pizza menus'),
-                $message(21, 2, 2, 'Pizza later maybe'),
-            ],
-        ]);
-    }
-
     /** @return int[] */
-    private function found(int $actor, array $filter): array
+    private function conversations(int $actor, string $q): array
     {
-        [$status, $body] = $this->call('GET', '/api/dialog-messages', $actor, null, ['filter' => $filter, 'sort' => '-number']);
+        [$status, $body] = $this->call('GET', '/api/dialogs', $actor, null, ['filter' => ['q' => $q]]);
         $this->assertSame(200, $status, json_encode($body));
 
-        return array_map(fn ($m) => (int) $m['id'], $body['data']);
+        $ids = array_map(fn ($d) => (int) $d['id'], $body['data']);
+        sort($ids);
+
+        return $ids;
     }
 
     #[Test]
-    public function every_conversation_is_searched_by_default()
+    public function a_conversation_is_found_by_who_it_is_with()
     {
-        $found = $this->found(2, ['q' => 'pizza']);
-        sort($found);
-
-        $this->assertSame([11, 12, 21], $found);
+        $this->assertSame([2], $this->conversations(2, 'outsi'));
+        $this->assertSame([1], $this->conversations(2, 'MEMBER'));
     }
 
     #[Test]
-    public function one_conversation_is_searched_newest_first()
+    public function a_group_is_found_by_its_name()
     {
-        $this->assertSame([12, 11], $this->found(2, ['q' => 'pizza', 'dialog' => '1']));
+        $this->assertSame([1], $this->conversations(4, 'squad'));
     }
 
     #[Test]
-    public function a_group_member_finds_the_groups_messages_and_not_others()
+    public function your_own_name_finds_nothing()
     {
-        $found = $this->found(4, ['q' => 'pizza']);
-        sort($found);
-
-        $this->assertSame([11, 12], $found);
+        $this->assertSame([], $this->conversations(5, 'outsider'));
     }
 
     #[Test]
-    public function someone_outside_a_group_cannot_search_it()
+    public function nobody_finds_a_conversation_they_are_not_in()
     {
-        $this->assertSame([], $this->found(5, ['q' => 'pizza', 'dialog' => '1']));
-        $this->assertSame([21], $this->found(5, ['q' => 'pizza']));
+        $this->assertSame([], $this->conversations(5, 'squad'));
+        $this->assertSame([], $this->conversations(5, 'member'));
+    }
+
+    #[Test]
+    public function like_wildcards_are_taken_literally()
+    {
+        $this->assertSame([], $this->conversations(2, '%'));
+        $this->assertSame([], $this->conversations(2, '_'));
+    }
+
+    #[Test]
+    public function a_name_with_an_underscore_is_found_by_it()
+    {
+        $this->app();
+        $this->database()->table('users')->where('id', 5)->update(['username' => 'out_sider']);
+
+        $this->assertSame([2], $this->conversations(2, 'out_'));
+        $this->assertSame([], $this->conversations(2, 'outs'));
     }
 }

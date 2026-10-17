@@ -8,12 +8,15 @@ use Ernestdefoe\GroupMessages\Api\GroupEndpoints;
 use Ernestdefoe\GroupMessages\Api\GroupFields;
 use Ernestdefoe\GroupMessages\Api\MessageEndpoints;
 use Ernestdefoe\GroupMessages\Api\MessageFields;
+use Ernestdefoe\GroupMessages\Search\DialogFulltextFilter;
 use Flarum\Extend;
 use Flarum\Messages\Access\MessagingPermission;
 use Flarum\Messages\Api\Resource\DialogMessageResource;
 use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
 use Flarum\Messages\DialogMessage;
+use Flarum\Messages\Search\DialogSearcher;
+use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
 
@@ -107,6 +110,11 @@ return [
             (new Extend\ApiResource(DialogResource::class))
                 ->field('canSendMessage', fn ($field) => $once(GroupFields::class)->canSendMessageMutator()($field)),
         ]),
+
+    // Finding a conversation by who it is with, or by a group's name: the
+    // Messages page's search box lists these above the matching messages.
+    (new Extend\SearchDriver(DatabaseSearchDriver::class))
+        ->setFulltext(DialogSearcher::class, DialogFulltextFilter::class),
 
     (new Extend\ThrottleApi())
         ->set('groupMessagesNewGroups', GroupCreationThrottler::class),
