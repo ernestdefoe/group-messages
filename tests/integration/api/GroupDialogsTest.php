@@ -129,6 +129,30 @@ class GroupDialogsTest extends GroupMessagesTestCase
     }
 
     #[Test]
+    public function a_management_action_only_targets_a_member_of_the_group()
+    {
+        // User 5 exists but is not in the group; 999 does not exist. Both
+        // answer the same, so a manager can't probe which user ids exist.
+        foreach (['remove-participant', 'moderators', 'remove-moderator'] as $action) {
+            $outside = $this->call('POST', "/api/dialogs/1/$action", 2, ['userId' => 5]);
+            $missing = $this->call('POST', "/api/dialogs/1/$action", 2, ['userId' => 999]);
+            $this->assertSame(400, $outside[0], $action);
+            $this->assertSame(400, $missing[0], $action);
+        }
+        $this->assertSame([2, 3, 4], $this->participants(1));
+    }
+
+    #[Test]
+    public function a_group_icon_is_capped_server_side()
+    {
+        $this->assertSame(200, $this->call('POST', '/api/dialogs/1/settings', 2, ['iconUrl' => str_repeat('x', 300)])[0]);
+        $this->assertSame(16, mb_strlen($this->database()->table('group_dialogs')->where('dialog_id', 1)->value('icon_url')));
+
+        $this->call('POST', '/api/dialogs/1/settings', 2, ['iconUrl' => '  ']);
+        $this->assertNull($this->database()->table('group_dialogs')->where('dialog_id', 1)->value('icon_url'));
+    }
+
+    #[Test]
     public function only_the_owner_appoints_moderators()
     {
         $this->assertSame(403, $this->call('POST', '/api/dialogs/1/moderators', 3, ['userId' => 4])[0]);

@@ -20,7 +20,7 @@ class MessagesTest extends GroupMessagesTestCase
     public function a_participant_reacts_once_per_emoji_and_can_take_it_back()
     {
         $this->assertSame(200, $this->call('POST', '/api/dialog-messages/10/react', 4, ['reaction' => '👍'])[0]);
-        $this->call('POST', '/api/dialog-messages/10/react', 4, ['reaction' => '👍']);
+        $this->assertSame(200, $this->call('POST', '/api/dialog-messages/10/react', 4, ['reaction' => '👍'])[0], 'Reacting again is a no-op, not a unique-index 500');
         $this->call('POST', '/api/dialog-messages/10/react', 3, ['reaction' => '👍']);
 
         $this->assertSame([['reaction' => '👍', 'count' => 2, 'mine' => true]], $this->reactions(10, 4));

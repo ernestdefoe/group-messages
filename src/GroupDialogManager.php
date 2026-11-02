@@ -59,7 +59,7 @@ class GroupDialogManager
             $detail = new GroupDialog();
             $detail->dialog_id = $dialog->id;
             $detail->title = $this->normalizeTitle($title);
-            $detail->icon_url = $iconUrl ?: null;
+            $detail->icon_url = $this->normalizeIcon($iconUrl);
             $detail->owner_id = (int) $actor->id;
             $detail->save();
 
@@ -193,7 +193,7 @@ class GroupDialogManager
     {
         $detail = $this->detail($dialog);
         if ($detail) {
-            $detail->icon_url = $iconUrl ?: null;
+            $detail->icon_url = $this->normalizeIcon($iconUrl);
             $detail->save();
         }
     }
@@ -273,5 +273,19 @@ class GroupDialogManager
         $title = trim((string) $title);
 
         return $title === '' ? null : mb_substr($title, 0, 150);
+    }
+
+    /**
+     * The group icon is an emoji (the column/field keep their original
+     * `icon_url`/`iconUrl` names so existing API clients don't break). It is
+     * rendered as text, never as a URL. The forum's input caps it at 8
+     * characters; cap it server-side too so an API caller can't overflow the
+     * column. 16 code points leaves room for long ZWJ emoji sequences.
+     */
+    protected function normalizeIcon(mixed $icon): ?string
+    {
+        $icon = is_string($icon) ? trim($icon) : '';
+
+        return $icon === '' ? null : mb_substr($icon, 0, 16);
     }
 }

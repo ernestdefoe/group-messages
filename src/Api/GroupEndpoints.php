@@ -103,7 +103,7 @@ class GroupEndpoints
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
                     $manager = $this->manager;
-                    $target = static::targetUser($context);
+                    $target = static::targetUser($context, $dialog);
 
                     $role = $manager->roleOf($dialog, $target);
                     if ($role === GroupDialogManager::ROLE_OWNER) {
@@ -140,7 +140,7 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    $this->manager->promoteModerator($dialog, static::targetUser($context));
+                    $this->manager->promoteModerator($dialog, static::targetUser($context, $dialog));
 
                     return $dialog->refresh();
                 }),
@@ -152,7 +152,7 @@ class GroupEndpoints
                 ->action(function (Context $context) {
                     /** @var Dialog $dialog */
                     $dialog = $context->model;
-                    $this->manager->demoteModerator($dialog, static::targetUser($context));
+                    $this->manager->demoteModerator($dialog, static::targetUser($context, $dialog));
 
                     return $dialog->refresh();
                 }),
@@ -171,12 +171,17 @@ class GroupEndpoints
         return array_values(array_filter(array_map('intval', Arr::wrap($raw)), fn ($id) => $id > 0));
     }
 
-    protected static function targetUser(Context $context): User
+    /**
+     * The member a management action targets. Looked up among the dialog's own
+     * participants (whom the actor can already see), so an unknown id and a
+     * real user outside the group answer alike: no probing which ids exist.
+     */
+    protected static function targetUser(Context $context, Dialog $dialog): User
     {
         $id = (int) (static::attributes($context)['userId'] ?? 0);
-        $user = $id > 0 ? User::query()->find($id) : null;
-        if (! $user) {
-            throw new BadRequestException('userId is required and must be a valid user.');
+        $user = $id > 0 ? $dialog->users()->where('users.id', $id)->first() : null;
+        if (! $user instanceof User) {
+            throw new BadRequestException('userId must be a member of this group.');
         }
 
         return $user;

@@ -30,20 +30,14 @@ class MessageEndpoints
                     $actorId = (int) $context->getActor()->id;
                     $reaction = static::reaction($context);
 
-                    $exists = DialogMessageReaction::query()
-                        ->where('message_id', $message->id)
-                        ->where('user_id', $actorId)
-                        ->where('reaction', $reaction)
-                        ->exists();
-
-                    if (! $exists) {
-                        $row = new DialogMessageReaction();
-                        $row->message_id = (int) $message->id;
-                        $row->user_id = $actorId;
-                        $row->reaction = $reaction;
-                        $row->created_at = Carbon::now();
-                        $row->save();
-                    }
+                    // One atomic statement: two concurrent identical reactions
+                    // can't race past an exists() check into the unique index.
+                    DialogMessageReaction::query()->insertOrIgnore([
+                        'message_id' => (int) $message->id,
+                        'user_id' => $actorId,
+                        'reaction' => $reaction,
+                        'created_at' => Carbon::now(),
+                    ]);
 
                     return $message->refresh();
                 }),
