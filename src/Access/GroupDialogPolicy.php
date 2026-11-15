@@ -10,8 +10,8 @@ use Flarum\User\User;
 /**
  * Authorisation for managing group dialogs. Layered on flarum/messages'
  * DialogPolicy (which already gates view/sendMessage). These abilities only
- * ever allow for type='group' dialogs — they abstain (null) for 'direct' so a
- * caller can't drive the group endpoints against a normal DM.
+ * ever allow for groups this extension manages (a group_dialogs row). They
+ * abstain (null) for direct conversations and for Flarum 2.1's own groups.
  */
 class GroupDialogPolicy extends AbstractPolicy
 {
@@ -19,9 +19,10 @@ class GroupDialogPolicy extends AbstractPolicy
     {
     }
 
+    /** Only groups this extension manages; core's own groups (2.1) are core's. */
     protected function isGroup(Dialog $dialog): bool
     {
-        return $dialog->type === 'group';
+        return $this->groups->isManaged($dialog);
     }
 
     /** Rename, set icon, add/remove members — owner or moderator. */

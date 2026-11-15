@@ -8,6 +8,12 @@ use PHPUnit\Framework\Attributes\Test;
 /** Creating a group, what it serializes, and who may manage it. */
 class GroupDialogsTest extends GroupMessagesTestCase
 {
+    /** Group Messages' leave answers with the dialog (Flarum 2.0), core's (2.1) with 204. */
+    private function assertLeft(array $response): void
+    {
+        $this->assertContains($response[0], [200, 204], json_encode($response[1]));
+    }
+
     private function dialog(int $id, int $actor): array
     {
         [$status, $body] = $this->call('GET', "/api/dialogs/$id", $actor);
@@ -174,7 +180,7 @@ class GroupDialogsTest extends GroupMessagesTestCase
         $this->app();
         $this->database()->table('group_dialog_moderators')->where('dialog_id', 1)->update(['user_id' => 4]);
 
-        $this->assertSame(200, $this->call('POST', '/api/dialogs/1/leave', 2)[0]);
+        $this->assertLeft($this->call('POST', '/api/dialogs/1/leave', 2));
 
         $this->assertSame([3, 4], $this->participants(1));
         $this->assertSame(4, (int) $this->database()->table('group_dialogs')->where('dialog_id', 1)->value('owner_id'));
@@ -186,7 +192,7 @@ class GroupDialogsTest extends GroupMessagesTestCase
     {
         $this->call('POST', '/api/dialogs/1/remove-participant', 2, ['userId' => 3]);
         $this->call('POST', '/api/dialogs/1/remove-participant', 2, ['userId' => 4]);
-        $this->assertSame(200, $this->call('POST', '/api/dialogs/1/leave', 2)[0]);
+        $this->assertLeft($this->call('POST', '/api/dialogs/1/leave', 2));
 
         $this->assertSame(0, $this->database()->table('dialogs')->where('id', 1)->count());
     }

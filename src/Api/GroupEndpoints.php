@@ -5,6 +5,7 @@ namespace Ernestdefoe\GroupMessages\Api;
 use Ernestdefoe\GroupMessages\GroupDialogManager;
 use Flarum\Api\Context;
 use Flarum\Api\Endpoint;
+use Flarum\Messages\Command\LeaveDialog;
 use Flarum\Messages\Dialog;
 use Flarum\User\Exception\PermissionDeniedException;
 use Flarum\User\User;
@@ -33,7 +34,7 @@ class GroupEndpoints
      */
     public function get(): array
     {
-        return [
+        $endpoints = [
             // Create a group. Mirrors the DM gate (sendAnyMessage); the
             // participant minimum is enforced in the manager.
             Endpoint\Endpoint::make('group-messages.create')
@@ -121,18 +122,6 @@ class GroupEndpoints
                     return $dialog->refresh();
                 }),
 
-            Endpoint\Endpoint::make('group-messages.leave')
-                ->route('POST', '/{id}/leave')
-                ->authenticated()
-                ->can('leaveGroup')
-                ->action(function (Context $context) {
-                    /** @var Dialog $dialog */
-                    $dialog = $context->model;
-                    $this->manager->leave($dialog, $context->getActor());
-
-                    return $dialog;
-                }),
-
             Endpoint\Endpoint::make('group-messages.addModerator')
                 ->route('POST', '/{id}/moderators')
                 ->authenticated()
@@ -157,6 +146,27 @@ class GroupEndpoints
                     return $dialog->refresh();
                 }),
         ];
+
+        // Flarum 2.1 has its own POST /dialogs/{id}/leave for groups. Two routes
+        // on one path stop the router from compiling, which takes every page
+        // down, so ours is only there when core has none. Core's leave then
+        // runs for our groups too, and HandOverWhenUserLeft hands the owner
+        // role on.
+        if (! class_exists(LeaveDialog::class)) {
+            $endpoints[] = Endpoint\Endpoint::make('group-messages.leave')
+                ->route('POST', '/{id}/leave')
+                ->authenticated()
+                ->can('leaveGroup')
+                ->action(function (Context $context) {
+                    /** @var Dialog $dialog */
+                    $dialog = $context->model;
+                    $this->manager->leave($dialog, $context->getActor());
+
+                    return $dialog;
+                });
+        }
+
+        return $endpoints;
     }
 
     /** @return array<string, mixed> */

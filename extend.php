@@ -8,12 +8,14 @@ use Ernestdefoe\GroupMessages\Api\GroupEndpoints;
 use Ernestdefoe\GroupMessages\Api\GroupFields;
 use Ernestdefoe\GroupMessages\Api\MessageEndpoints;
 use Ernestdefoe\GroupMessages\Api\MessageFields;
+use Ernestdefoe\GroupMessages\Listener\HandOverWhenUserLeft;
 use Ernestdefoe\GroupMessages\Search\DialogFulltextFilter;
 use Flarum\Extend;
 use Flarum\Messages\Access\MessagingPermission;
 use Flarum\Messages\Api\Resource\DialogMessageResource;
 use Flarum\Messages\Api\Resource\DialogResource;
 use Flarum\Messages\Dialog;
+use Flarum\Messages\Dialog\Event\UserLeft;
 use Flarum\Messages\DialogMessage;
 use Flarum\Messages\Search\DialogSearcher;
 use Flarum\Search\Database\DatabaseSearchDriver;
@@ -83,6 +85,9 @@ return [
         ->endpoints(fn () => $once(GroupEndpoints::class)->get())
         ->fields(fn () => $once(GroupFields::class)->added())
         ->field('title', fn ($field) => $once(GroupFields::class)->titleMutator()($field))
+        // Flarum 2.1's group names: only on groups core runs, not ours.
+        ->field('name', fn ($field) => $once(GroupFields::class)->nameMutator()($field))
+        ->field('canRename', fn ($field) => $once(GroupFields::class)->canRenameMutator()($field))
         ->endpoint(['index', 'show'], fn ($endpoint) => $endpoint
             ->eagerLoad(['groupDetail', 'moderators', 'users', 'readStates'])
             // Each conversation's latest message carries its reactions and reply.
@@ -107,4 +112,9 @@ return [
 
     (new Extend\Policy())
         ->modelPolicy(Dialog::class, GroupDialogPolicy::class),
+
+    // Flarum 2.1 leaves groups itself; an owner leaving one of ours hands it on.
+    // Flarum 2.0 has no such event (::class loads nothing), so it never fires there.
+    (new Extend\Event())
+        ->listen(UserLeft::class, HandOverWhenUserLeft::class),
 ];

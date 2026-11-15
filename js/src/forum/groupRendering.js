@@ -26,12 +26,21 @@ export function groupIcon(dialog) {
   );
 }
 
+/**
+ * A group Group Messages runs: started from its New group form, with an owner.
+ * Flarum 2.1 starts groups of its own (same 'group' type), which core renders
+ * and manages itself; those are left alone.
+ */
+export function isManagedGroup(dialog) {
+  return dialog.type() === 'group' && dialog.attribute('isManagedGroup') !== false;
+}
+
 export default function applyGroupRendering() {
   // ----- Dialog list item: group icon + group name instead of a recipient.
   reg.onLoad('flarum-messages', 'forum/components/DialogListItem', (DialogListItem) => {
     override(DialogListItem.prototype, 'view', function (original, vnode) {
       const dialog = this.attrs.dialog;
-      if (dialog.type() !== 'group') return original(vnode);
+      if (!isManagedGroup(dialog)) return original(vnode);
 
       const unread = dialog.unreadCount();
       const actions = this.attrs.actions ? this.actionItems().toArray() : [];
@@ -79,7 +88,7 @@ export default function applyGroupRendering() {
   reg.onLoad('flarum-messages', 'forum/components/DialogSection', (DialogSection) => {
     override(DialogSection.prototype, 'view', function (original) {
       const dialog = this.attrs.dialog;
-      if (dialog.type() !== 'group') return original();
+      if (!isManagedGroup(dialog)) return original();
 
       // MessageStream is in the same chunk as DialogSection, so it's loaded by
       // the time this renders — fetch it lazily rather than import it at init.
@@ -106,7 +115,11 @@ export default function applyGroupRendering() {
 
     extend(DialogSection.prototype, 'controlItems', function (items) {
       const dialog = this.attrs.dialog;
-      if (dialog.type() !== 'group') return;
+      if (!isManagedGroup(dialog)) return;
+
+      // Flarum 2.1 lets anyone who can write rename a group; in ours the
+      // owner and moderators do, from Manage.
+      if (items.has('rename')) items.remove('rename');
 
       items.add(
         'manageGroup',
@@ -124,7 +137,7 @@ export default function applyGroupRendering() {
     extend(MessageSearchResult.prototype, 'contentItems', function (items) {
       const message = this.attrs.message;
       const dialog = message.dialog();
-      if (!dialog || dialog.type() !== 'group' || !items.has('text')) return;
+      if (!dialog || !isManagedGroup(dialog) || !items.has('text')) return;
 
       items.setContent(
         'text',

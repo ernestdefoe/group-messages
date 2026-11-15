@@ -151,33 +151,53 @@ class GroupDialogManager
     /**
      * A participant leaves. If the owner leaves, ownership passes to a
      * moderator (or any remaining member); if no one remains, the dialog is
-     * dropped.
+     * dropped. Used where flarum/messages has no leave of its own (2.0); from
+     * 2.1 core's leave runs and afterLeft() is called from its UserLeft event.
      */
     public function leave(Dialog $dialog, User $user): void
     {
-        // Removing the participant, reassigning ownership, and detaching/deleting
-        // are several writes that must not half-apply — wrap them in one
-        // transaction so a mid-sequence failure can't orphan the dialog
-        // (mirrors create()).
+        // Several writes that must not half-apply (mirrors create()).
         Dialog::query()->getConnection()->transaction(function () use ($dialog, $user) {
-            $detail = $this->detail($dialog);
-            $isOwner = $detail && (int) $detail->owner_id === (int) $user->id;
-
             $this->removeParticipant($dialog, $user);
 
-            if ($isOwner && $detail) {
-                $heir = $dialog->moderators()->where('users.id', '!=', $user->id)->value('users.id')
-                    ?? $dialog->users()->where('users.id', '!=', $user->id)->value('users.id');
-
-                if ($heir) {
-                    $detail->owner_id = (int) $heir;
-                    $detail->save();
-                    $dialog->moderators()->detach($heir);
-                } else {
-                    $dialog->delete();
-                }
+            if (! $this->afterLeft($dialog, $user) && ! $dialog->users()->exists()) {
+                $dialog->delete();
             }
         });
+    }
+
+    /**
+     * What a member leaving changes in a group we manage: they stop being a
+     * moderator, and an owner hands the group on to a moderator, else to the
+     * longest-standing member. Returns whether someone was left to inherit it.
+     * Core groups (no group_dialogs row) are left alone.
+     */
+    public function afterLeft(Dialog $dialog, User $user): bool
+    {
+        $detail = $this->detail($dialog);
+
+        if (! $detail) {
+            return false;
+        }
+
+        $dialog->moderators()->detach($user->id);
+
+        if ((int) $detail->owner_id !== (int) $user->id) {
+            return true;
+        }
+
+        $heir = $dialog->moderators()->where('users.id', '!=', $user->id)->value('users.id')
+            ?? $dialog->users()->where('users.id', '!=', $user->id)->orderBy('dialog_user.joined_at')->orderBy('users.id')->value('users.id');
+
+        if (! $heir) {
+            return false;
+        }
+
+        $detail->owner_id = (int) $heir;
+        $detail->save();
+        $dialog->moderators()->detach($heir);
+
+        return true;
     }
 
     public function rename(Dialog $dialog, ?string $title): void
@@ -246,6 +266,16 @@ class GroupDialogManager
     public function isOwner(Dialog $dialog, ?User $user): bool
     {
         return $this->roleOf($dialog, $user) === self::ROLE_OWNER;
+    }
+
+    /**
+     * A group this extension manages: started from its New group form, so it
+     * has an owner and a group_dialogs row. Flarum 2.1 starts groups of its
+     * own (same 'group' type, no row); those are core's to run.
+     */
+    public function isManaged(Dialog $dialog): bool
+    {
+        return $dialog->type === 'group' && $this->detail($dialog) !== null;
     }
 
     /**
