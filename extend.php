@@ -20,24 +20,10 @@ use Flarum\Search\Database\DatabaseSearchDriver;
 use Flarum\User\User;
 use Illuminate\Support\Arr;
 
-// Register the 'group' dialog type alongside flarum/messages' built-in
-// 'direct'. DialogResource validates the type against Dialog::$types
-// (->in(Dialog::$types)), so without this the API rejects type=group.
-//
-// COMPATIBILITY NOTE: flarum/messages exposes no extender for registering
-// dialog types, so this appends to its static $types array directly at boot —
-// the one place this extension reaches into flarum/messages internals. If a
-// future release changes the validation strategy or removes the property,
-// revisit here (ideally replace with a `Messages::addDialogType()` extender if
-// one is added upstream). The guards below keep a half-installed state or an
-// upstream API change from fataling the boot, and stop a double-registration
-// if two extensions both append 'group'.
-if (class_exists(Dialog::class)
-    && property_exists(Dialog::class, 'types')
-    && ! in_array('group', Dialog::$types, true)
-) {
-    Dialog::$types[] = 'group';
-}
+// Group dialogs are stored with type 'group' by GroupDialogManager, server-side.
+// flarum/messages' DialogResource checks `type` against Dialog::$types only
+// when a client writes it, and `type` is read-only there, so no registration
+// of the type is needed (flarum/messages 2.1 also lists 'group' itself).
 
 // Lazily resolve a class at most once per request — the dialog-resource
 // closures below only run for API requests, so this avoids resolving GroupFields

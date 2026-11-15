@@ -48,7 +48,10 @@ class GroupDialogsTest extends GroupMessagesTestCase
         $this->assertSame([3, 4, 5], $this->participants($id));
         $this->assertSame('group', $this->database()->table('dialogs')->where('id', $id)->value('type'));
 
+        // Served as 'group' without the extension touching Dialog::$types:
+        // the resource only checks the type when a client writes it.
         $attributes = $this->dialog($id, 4);
+        $this->assertSame('group', $attributes['type']);
         $this->assertTrue($attributes['isGroup']);
         $this->assertSame('Road trip', $attributes['title']);
         $this->assertSame(4, $attributes['ownerId']);
@@ -74,6 +77,7 @@ class GroupDialogsTest extends GroupMessagesTestCase
     {
         $attributes = $this->dialog(2, 2);
 
+        $this->assertSame('direct', $attributes['type']);
         $this->assertFalse($attributes['isGroup']);
         $this->assertNull($attributes['actorRole']);
         $this->assertSame([], $attributes['roles']);
